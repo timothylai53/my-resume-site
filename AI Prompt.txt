@@ -1,173 +1,198 @@
-Create a NEW Excel workbook named:
+UPDATE the existing workbook:
 
 synthetic_vm_test_data.xlsx
 
-This workbook will be used for development and testing of my university
-project:
+Do NOT recreate the workbook from scratch.
+Do NOT modify or delete the existing "Raw Data" sheet.
+Do NOT change any of the 1,000 synthetic Raw Data records.
 
-Vulnerability Management Reporting Automation System
+Add THREE new worksheets to the SAME workbook.
+
+The workbook should contain:
+
+1. Raw Data
+2. Cluster Mapping
+3. Business Function Mapping
+4. Prioty
+
+IMPORTANT:
+The following three mapping sheets contain predefined reference/configuration
+data.
+
+Use the values EXACTLY as specified below.
+
+Do NOT generate synthetic variations.
+Do NOT rename categories.
+Do NOT correct spelling unless explicitly instructed.
+Do NOT add additional mappings.
+
+==================================================
+SHEET 1: Cluster Mapping
+==================================================
+
+Create a worksheet named exactly:
+
+Cluster Mapping
+
+Create two columns:
+
+ICS Group Country
+Cluster
+
+Populate exactly these mappings:
+
+Australia | ASEAN
+Bahrain | Middle East and Pakistan
+Bangladesh | South Asia
+Botswana | Africa
+Brunei Darussalam | ASEAN
+Cameroon | Africa
+China | North Asia
+Cote D'Ivoire | Africa
+Egypt | Middle East and Pakistan
+Ghana | Africa
+Group | Group
+India | South Asia
+Indonesia | ASEAN
+Iraq | Middle East and Pakistan
+Kenya | Africa
+KOREA, REPUBLIC OF | North Asia
+Malaysia | ASEAN
+Mauritius | Africa
+Nepal | South Asia
+Nigeria | Africa
+Oman | Middle East and Pakistan
+Pakistan | Middle East and Pakistan
+Philippines | ASEAN
+Qatar | Middle East and Pakistan
+Saudi Arabia | Middle East and Pakistan
+Singapore | ASEAN
+South Africa | Africa
+Sri Lanka | South Asia
+Taiwan | North Asia
+TANZANIA, UNITED REPUBLIC OF | Africa
+Thailand | ASEAN
+Uganda | Africa
+United Arab Emirates | Middle East and Pakistan
+Vietnam | ASEAN
+Zambia | Africa
+
+IMPORTANT:
+These values will later be used by the backend to populate the blank "Cluster"
+column in Raw Data using:
+
+Raw Data[ICS Group Country]
+    ->
+Cluster Mapping[ICS Group Country]
+    ->
+Cluster Mapping[Cluster]
+
+Do NOT populate Raw Data[Cluster] yet.
+
+==================================================
+SHEET 2: Business Function Mapping
+==================================================
+
+Create a worksheet named exactly:
+
+Business Function Mapping
+
+Create two columns:
+
+Source Business Function
+Mapped Business Function
+
+Populate:
+
+*CSR* | IVS
+AVS | AVS
+IVS | IVS
+PT | PT
+SPM | CVE
 
 IMPORTANT:
 
-Do NOT search for an existing Excel template.
-Do NOT request the original company workbook.
-Do NOT depend on existing files in the project.
+The *CSR* value contains wildcard symbols intentionally.
 
-Create the Excel workbook from scratch using the exact schema provided below.
+Do NOT remove the * characters.
 
-All generated records must be completely SYNTHETIC.
+Later backend processing may interpret:
 
-Do NOT use, reconstruct, infer, imitate, or generate any real organizational
-vulnerability information.
+*CSR*
 
-Do NOT generate realistic internal:
-- vulnerability IDs
-- application names
-- server names
-- hostnames
-- IP addresses
-- CI identifiers
-- usernames
-- URLs
-- asset identifiers
-- internal project names
+as a contains-text matching rule rather than necessarily an exact string
+match.
 
-The generated workbook exists strictly for software development and testing.
+For now, simply preserve the mapping exactly in the worksheet.
+
+These mappings will later be used to derive the application's standardized
+business-function classification.
 
 ==================================================
-1. OUTPUT FILE
+SHEET 3: Prioty
 ==================================================
 
-Create:
+IMPORTANT:
+Keep the spelling:
 
-synthetic_vm_test_data.xlsx
+Prioty
 
-Worksheet name:
+Do NOT rename it to "Priority".
+
+Create a worksheet named exactly:
+
+Prioty
+
+Create five columns:
+
+Condition
+IVS
+AVS
+CVE
+PT
+
+Populate exactly:
+
+Condition | IVS | AVS | CVE | PT
+
+IF (CJ) | P1 | P1 | P1 | P1
+
+IF (IBS) | P1 | P1 | P1 | P1
+
+IF (non CJ, non IBS) | P2 | P2 | P1 | P1
+
+Non IF (IBS, CJ) | P2 | P2 | P2 | P2
+
+Others (Non IF, non CJ, non IBS) | P4 | P4 | P3 | P3
+
+IMPORTANT:
+
+This sheet is configuration/reference data for future priority calculation.
+
+Do NOT yet implement the priority calculation.
+
+Do NOT populate Raw Data[Prioty].
+
+Raw Data[Prioty] must remain blank at this stage.
+
+The backend will later use this matrix together with the relevant business
+classification fields.
+
+==================================================
+WORKBOOK REQUIREMENTS
+==================================================
+
+After this update, synthetic_vm_test_data.xlsx must contain exactly these four
+worksheets:
 
 Raw Data
-
-Create exactly:
-
-1 header row
-+
-1,000 synthetic data rows
-
-There should therefore be 1,001 worksheet rows in total including the header.
-
-Actually CREATE the .xlsx file in the current project workspace.
-
-Do NOT only provide Python code.
-Do NOT only explain how to create the workbook.
-
-==================================================
-2. EXACT COLUMN SCHEMA
-==================================================
-
-Use the following column headers EXACTLY as written and in EXACTLY this order.
-
-Do not:
-- correct spelling
-- rename columns
-- change capitalization
-- remove columns
-- add columns
-- reorder columns
-
-COLUMN HEADERS:
-
-Unique Reference ID
-Unique ID
-Description
-Discovery Method
-Country
-Impacted Area
-SLA Start Date
-SLA Due Date
-Within SLA?
-SLA Days
-SLA Category
-Product/OS
-IP
-Host Name
-Last Detected
-Asset Status
-Asset Capability
-Asset Environment
-Cmdb Review
-CIID
-CI Name
-IBS
-Cluster
-Group Apps
+Cluster Mapping
+Business Function Mapping
 Prioty
-Risk Assesment Require
-Sustainability Rate Calculation
-URL Scanned
-CVE ID
-OWASP Code
-SBIA Rating
-Remediation Domain
-Remediation Status
-Exception ID
-Exception Category
-Exception Expiry Date
-Baselined Remediation Planned Date
-Remediation Planned Date
-Remediation Closed Date
-Final Severity Rating
-ITO Unit
-Finding Tag SVLM
-Finding Tag RD
-No of Vulnerabilities
-Platform
-Source
-Business Function
-Remediation Domain Grouping
-Average Time To Remediate
-In Scope For Strike Rate
-Met or Breached SLA
-Updated Remediation Status
-New Findings?
-CJ or IF
-Aging by Year
-Aging by Days
-Scope
-Planned Remediation (Quarter)
-Planned Remediation (Month)
-Planned Remediation (Week)
-Closed By Year
-Closed By Year-month
-ICS Hierarchy
-ICS Group Country
-QTD
-MTD
-CVSS Access Vector
-CVSS Privilege Required
-CVSS Vector
-CVSS Version
-CVSS
-EPSS
-Exploit Maturity
-RTI
-Re Opened Closed Count
-Re Opened Remediated Count
-Last Month Remediation Status
-Last Month Remediation Domain Grouping
-Last Month Remediation Domain
-Last Month Final Severity Rating
-Last Month Planned Remediation (Quarter)
-Report Start Date
-Report End Date
-Aging Years
-Due In Months
 
-==================================================
-3. IMPORTANT: ADDITIONAL COLUMNS I CREATED
-==================================================
+Preserve the 1,000 existing synthetic rows in Raw Data.
 
-The following columns are NOT original raw-data fields.
-
-I manually added these columns to my existing Excel workflow:
+Do NOT modify:
 
 Within SLA?
 IBS
@@ -176,223 +201,16 @@ Group Apps
 Prioty
 Risk Assesment Require
 
-KEEP these six columns in the workbook.
+These six Raw Data columns must remain blank across all 1,000 records.
 
-KEEP their exact names.
-
-KEEP their exact positions.
-
-However:
-
-LEAVE ALL 1,000 ROWS BLANK for these six columns.
-
-Do NOT generate values for them.
-
-Do NOT calculate them yet.
-
-Do NOT treat these six columns as required raw-input fields.
-
-They will later be populated by the application's business-rule and
-enrichment processing.
-
-Their future intended purposes are:
-
-Within SLA?
--> calculated later using SLA business rules.
-
-IBS
--> populated/calculated later using confirmed IBS rules/mappings.
-
-Cluster
--> calculated later based on confirmed cluster mapping rules.
-
-Group Apps
--> populated later according to confirmed mapping/business rules.
-
-Prioty
--> calculated later using confirmed vulnerability prioritization rules.
-
-IMPORTANT:
-Keep the spelling "Prioty".
-
-Risk Assesment Require
--> populated later according to confirmed business rules.
-
-Do NOT guess any logic for these fields.
+The mapping sheets are reference/configuration sheets only.
 
 ==================================================
-4. SYNTHETIC IDENTIFIERS
+FORMATTING
 ==================================================
 
-Generate obviously fictional identifiers.
+For each mapping sheet:
 
-Examples:
-
-Unique Reference ID:
-TEST-VUL-000001
-TEST-VUL-000002
-TEST-VUL-000003
-
-Unique ID:
-TEST-UID-000001
-TEST-UID-000002
-
-CIID:
-TEST-CI-000001
-
-CI Name:
-Synthetic Application 001
-Synthetic Application 002
-
-Host Name:
-
-test-host-001.example.invalid
-test-host-002.example.invalid
-
-URL:
-
-https://test-app-001.example.invalid
-
-Use test/documentation-safe values for network fields.
-
-Do not generate organizationally realistic system identifiers.
-
-==================================================
-5. SYNTHETIC DATA VARIATION
-==================================================
-
-Generate sufficient variation across the 1,000 records.
-
-The dataset should support later testing of:
-
-- Dataset validation
-- Data cleaning
-- XLOOKUP replacement / backend record matching
-- Country mapping
-- Cluster calculation
-- SLA calculation
-- IBS mapping
-- Priority calculation
-- Remediation analysis
-- Planned remediation analysis
-- Pivot-style summaries
-- Dashboard filters
-- Dashboard charts
-- Markets reporting
-- Data-quality reporting
-
-Most records should contain valid synthetic data.
-
-==================================================
-6. COUNTRY DATA
-==================================================
-
-Create synthetic records distributed across countries useful for testing
-cluster mapping.
-
-Use values such as:
-
-Australia
-Malaysia
-Singapore
-Indonesia
-Brunei Darussalam
-Philippines
-Thailand
-Vietnam
-China
-Taiwan
-KOREA, REPUBLIC OF
-India
-Bangladesh
-Sri Lanka
-Pakistan
-Bahrain
-Qatar
-Saudi Arabia
-United Arab Emirates
-Kenya
-Ghana
-Nigeria
-Botswana
-Uganda
-Zambia
-
-These country names are used only to exercise generic geographic grouping
-logic.
-
-Also intentionally include:
-
-- 3 records with blank Country
-- 3 records where Country = TEST-UNKNOWN
-
-Do NOT populate Cluster.
-
-Cluster must remain blank because it is an additional calculated column.
-
-==================================================
-7. SLA TEST DATA
-==================================================
-
-Populate synthetic values for:
-
-SLA Start Date
-SLA Due Date
-SLA Days
-SLA Category
-Report Start Date
-Report End Date
-
-Create several different SLA scenarios.
-
-Scenario A:
-Report End Date < SLA Due Date
-
-Scenario B:
-Report End Date = SLA Due Date
-
-Scenario C:
-Report End Date > SLA Due Date
-
-Scenario D:
-Missing SLA Due Date
-
-Scenario E:
-Missing Report End Date
-
-Scenario F:
-No SLA scenario where appropriate.
-
-IMPORTANT:
-
-Do NOT populate:
-
-Within SLA?
-
-That column must remain blank.
-
-The backend application will calculate it later.
-
-==================================================
-8. DATE DATA
-==================================================
-
-Excel date fields must contain actual Excel date values wherever populated.
-
-Do NOT store normal dates purely as formatted text.
-
-Populate appropriate synthetic values for:
-
-SLA Start Date
-SLA Due Date
-Last Detected
-Exception Expiry Date
-Baselined Remediation Planned Date
-Remediation Planned Date
-Remediation Closed Date
-Report Start Date
-Report End Date
-
-Create variation across multiple months.
-
-For 
+- Put headers in row 1.
+- Freeze the header row if convenient.
+- Keep normal tabular 
