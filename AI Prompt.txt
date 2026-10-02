@@ -1,0 +1,817 @@
+You are working inside my existing full-stack project.
+
+PROJECT TITLE:
+Vulnerability Management Reporting Automation System
+
+IMPORTANT:
+The project structure, frontend, backend, and required development tools/dependencies have already been created and installed.
+
+DO NOT recreate, reinitialize, or replace the existing project.
+
+Before making changes:
+1. Inspect the existing frontend and backend folder structure.
+2. Inspect package.json, requirements files, configuration files, and existing source code.
+3. Reuse the existing dependencies where possible.
+4. Preserve the existing prototype interface and visual design.
+5. Do not unnecessarily rewrite working components.
+
+==================================================
+PROJECT PURPOSE
+==================================================
+
+This system automates an existing Excel-based vulnerability management reporting workflow.
+
+Currently, the workflow involves:
+- Receiving raw vulnerability datasets
+- Matching records using Unique Reference ID
+- Retrieving additional vulnerability/remediation information
+- Cleaning and standardizing data
+- Applying country/cluster mappings
+- Applying business-function mappings
+- Calculating Within SLA status
+- Assigning vulnerability priorities
+- Processing planned remediation dates/months
+- Generating PivotTable-style summary analysis
+- Producing vulnerability/remediation reports
+
+The objective of this application is to allow a user to upload raw data and have the application automatically process the dataset, apply the business rules, generate reporting summaries, and display the results through the frontend dashboard.
+
+==================================================
+TECHNOLOGY STACK
+==================================================
+
+Use the existing project stack.
+
+Target architecture:
+
+Frontend:
+- React
+- TypeScript
+- Existing UI/component library
+- Recharts or existing chart library
+- React Router
+
+Backend:
+- Python
+- FastAPI
+- Pandas
+- OpenPyXL
+
+Database:
+- PostgreSQL
+
+Development architecture:
+
+React Frontend
+      |
+      | REST API
+      v
+FastAPI Backend
+      |
+      +---- Data Processing Layer
+      |       |
+      |       +-- Cleaning
+      |       +-- Mapping
+      |       +-- SLA Rules
+      |       +-- Priority Rules
+      |       +-- Summary Calculations
+      |
+      +---- PostgreSQL
+
+==================================================
+IMPORTANT DEVELOPMENT APPROACH
+==================================================
+
+Build this project incrementally.
+
+DO NOT attempt to implement every business rule at once.
+
+Prioritize:
+1. Application architecture
+2. Upload workflow
+3. Data validation
+4. Processing pipeline
+5. Existing confirmed business rules
+6. API integration
+7. Dashboard summaries
+8. Database persistence
+9. Testing
+
+Keep business rules modular so rules can be updated later without rewriting the entire application.
+
+==================================================
+EXISTING PROTOTYPE DESIGN
+==================================================
+
+The frontend prototype already exists.
+
+KEEP THE SAME visual concept and page layout.
+
+The interface should remain:
+- Enterprise/corporate
+- Clean banking/cybersecurity appearance
+- White/light-grey background
+- Teal primary accents
+- Blue secondary accents
+- Dark navy/charcoal text
+- Professional cards
+- Subtle shadows
+- Consistent spacing
+- Clear typography
+- Responsive
+- Minimal animation
+
+Do NOT redesign the application from scratch.
+
+Improve the existing design only where necessary for usability, responsiveness, or consistency.
+
+==================================================
+MAIN PAGES
+==================================================
+
+Maintain these four major interfaces.
+
+1. LOGIN
+2. DATASET UPLOAD & PROCESSING
+3. VULNERABILITY PRIORITIZATION DASHBOARD
+4. REMEDIATION & MARKETS ANALYSIS
+
+==================================================
+1. LOGIN
+==================================================
+
+Maintain the current prototype login interface.
+
+Fields:
+- Email
+- Password
+- Login
+
+For the first development stage, authentication may remain development/mock authentication unless a secure authentication mechanism is already configured.
+
+Keep authentication logic separate so production authentication can be integrated later.
+
+Never hardcode real passwords or secrets.
+
+==================================================
+2. DATASET UPLOAD & PROCESSING
+==================================================
+
+Convert the prototype upload page into a functional upload workflow.
+
+User should be able to:
+
+1. Select an Excel file.
+2. Upload it to FastAPI.
+3. Validate the dataset.
+4. Process the dataset.
+5. View processing results.
+6. Continue to the dashboard.
+
+Accept:
+.xlsx
+
+Backend should validate:
+- File type
+- File size where appropriate
+- Workbook readability
+- Required columns
+- Empty dataset
+- Missing identifiers
+- Duplicate identifiers
+- Invalid/missing dates
+- Unknown/unmapped values
+
+Return a validation summary to the frontend.
+
+Example fields:
+
+total_records
+missing_ids
+duplicate_ids
+invalid_dates
+unmapped_values
+validation_status
+errors
+warnings
+
+Do not silently discard problematic records.
+
+==================================================
+3. DATA PROCESSING ENGINE
+==================================================
+
+Create a modular backend processing structure.
+
+Suggested structure:
+
+backend/
+    app/
+        main.py
+        routes/
+            upload.py
+            dashboard.py
+            analysis.py
+
+        services/
+            excel_service.py
+            validation_service.py
+            processing_service.py
+            summary_service.py
+
+        rules/
+            cluster_rules.py
+            sla_rules.py
+            priority_rules.py
+            business_function_rules.py
+            date_rules.py
+
+        models/
+        schemas/
+        database/
+
+Adapt this structure to the existing repository rather than forcing it if an equivalent architecture already exists.
+
+==================================================
+UNIQUE REFERENCE ID
+==================================================
+
+Unique Reference ID is the main record identifier used during matching.
+
+Processing must support retrieving fields such as:
+
+- Remediation Status
+- Remediation Domain
+- Planned Remediation Month
+- Remediation Planned Date
+- Final Severity Rating
+
+Do not directly reproduce Excel XLOOKUP formulas.
+
+Implement equivalent matching using Pandas merge/join operations or appropriate backend data-processing logic.
+
+Before deciding duplicate handling, detect and report duplicate Unique Reference IDs.
+
+Do not arbitrarily remove duplicates.
+
+==================================================
+DATES
+==================================================
+
+Dates must remain actual date/datetime values internally whenever possible.
+
+Do not convert dates into formatted strings too early.
+
+Example:
+
+Internal:
+2026-12-31
+
+Frontend display:
+Dec-2026
+
+Planned remediation month should be displayed using:
+
+MMM-YYYY
+
+Examples:
+Dec-2026
+Apr-2027
+
+This is important so dates can still be sorted chronologically.
+
+Support special reporting categories where necessary, such as:
+
+No Plan Date
+Plan Date Expired
+
+Keep these separate from real dates internally when possible.
+
+==================================================
+CLUSTER MAPPING
+==================================================
+
+Implement country-to-cluster mapping as a configurable rule rather than spreading IF statements throughout the project.
+
+The reporting system currently uses cluster categories such as:
+
+- Africa
+- ASEAN
+- Group
+- Middle East and Pakistan
+- North Asia
+- South Asia
+
+Important confirmed example:
+
+Australia -> ASEAN
+
+If the source country value is blank, the processed cluster value may be:
+
+NA
+
+Keep mapping rules centralized so they can easily be modified later.
+
+==================================================
+WITHIN SLA
+==================================================
+
+Implement Within SLA logic in its own rule module.
+
+One confirmed rule from the validated Excel workflow is:
+
+Report End Date < SLA Due Date
+=> Yes
+
+Report End Date >= SLA Due Date
+=> No
+
+Therefore:
+
+Report End Date = SLA Due Date
+=> No
+
+Special values should be handled explicitly, including:
+
+No SLA
+No Report End Date
+
+Do not hide invalid dates.
+
+Return/report invalid data as a validation or processing issue.
+
+==================================================
+PRIORITY PROCESSING
+==================================================
+
+Priority classification must remain modular.
+
+Potential outputs:
+
+P1
+P2
+P3
+P4
+
+Priority depends on confirmed business-rule fields such as:
+
+- IBS / Non-IBS
+- Business Function
+- CJ / IF classification
+- Final Severity Rating
+
+DO NOT invent missing priority rules.
+
+Create a priority-rule configuration/module that can be progressively completed as confirmed business rules are provided.
+
+If a record cannot be classified according to confirmed rules, return something explicit such as:
+
+Unclassified
+
+and include it in validation/data-quality reporting.
+
+==================================================
+SUMMARY ENGINE
+==================================================
+
+Replace manual Excel PivotTables with backend aggregation.
+
+Use Pandas groupby/pivot_table or equivalent processing.
+
+The summary engine should eventually support:
+
+1. Vulnerability prioritization
+2. Cluster summary
+3. Country summary
+4. SLA summary
+5. Remediation status summary
+6. Planned remediation summary
+7. Markets analysis
+8. PT analysis
+9. CVE analysis
+10. IVS analysis
+11. AVS analysis
+
+Counts should be based on the required Unique Reference ID logic.
+
+Do not assume regular COUNT and DISTINCT COUNT are interchangeable.
+
+Keep aggregation logic explicit.
+
+==================================================
+VULNERABILITY PRIORITIZATION DASHBOARD
+==================================================
+
+Keep the existing prototype design.
+
+Filters:
+
+- Remediation Domain Grouping
+- ICS Hierarchy
+- Within SLA
+- Remediation Status
+
+KPI cards:
+
+- Total Vulnerabilities
+- P1
+- P2
+- P3
+- P4
+
+Add charts for Priority distribution.
+
+Create hierarchical table:
+
+Cluster / Country
+P1
+P2
+P3
+P4
+Grand Total
+
+Support cluster expansion into country.
+
+Example:
+
+North Asia
+    China
+    KOREA, REPUBLIC OF
+    Taiwan
+
+ASEAN
+    Australia
+    Brunei Darussalam
+    Indonesia
+    Malaysia
+    Philippines
+    Thailand
+    Vietnam
+
+Filtering should update cards, charts, and tables consistently.
+
+==================================================
+REMEDIATION & MARKETS ANALYSIS
+==================================================
+
+Keep the existing prototype tab layout:
+
+Remediation
+PT
+CVE
+IVS
+AVS
+
+REMEDIATION TAB:
+
+Include:
+- Met SLA
+- Breached SLA
+- Exception
+- Open
+- Overdue
+- Total
+- Remediation Rate Within SLA
+- Remediation Rate Within Month
+
+Support analysis by:
+
+- Cluster
+- Country
+- Quarter
+- Month
+- Priority
+- Severity
+- Business Function
+- Remediation Domain
+- Remediation Status
+
+Planned remediation periods should sort chronologically.
+
+Example:
+
+Sep-2026
+Oct-2026
+Nov-2026
+Dec-2026
+2027-Q1
+2027-Q2
+2027-Q3
+Plan Date Expired
+No Plan Date
+
+==================================================
+MARKETS ANALYSIS
+==================================================
+
+Use one reusable dashboard with tabs:
+
+PT
+CVE
+IVS
+AVS
+
+Do NOT create four completely duplicated pages.
+
+Each should support:
+
+1. Remediation Scope
+2. Remediation Progress
+3. Planned Remediation
+
+Example hierarchical dimensions:
+
+Cluster
+Country
+
+Example metrics:
+
+Number of Vulnerabilities
+Remediated
+Remediation Rate
+Planned Remediation Month
+
+==================================================
+DRILL-DOWN
+==================================================
+
+Where practical, clicking a dashboard count should allow users to inspect the underlying vulnerability records.
+
+Example:
+
+North Asia
+-> P2
+-> View corresponding records
+
+Detailed records can contain relevant reporting fields such as:
+
+Unique Reference ID
+Cluster
+Country
+Severity
+Priority
+Within SLA
+Remediation Status
+Remediation Domain
+Planned Remediation Month
+
+==================================================
+DATABASE
+==================================================
+
+Use PostgreSQL once the processing pipeline is stable.
+
+Do not tightly couple Pandas processing with database code.
+
+Potential entities:
+
+users
+uploads
+vulnerabilities
+processing_runs
+validation_issues
+
+Preserve reporting-period/history information where appropriate so future comparison between reporting periods is possible.
+
+Use database migrations if the existing backend architecture supports them.
+
+==================================================
+SECURITY
+==================================================
+
+This is a vulnerability-management application, so follow secure development practices.
+
+Requirements:
+
+- Never hardcode secrets
+- Use environment variables
+- Do not commit credentials
+- Validate uploaded files
+- Validate user input
+- Limit upload types
+- Return safe backend error responses
+- Do not expose stack traces to frontend users
+- Use parameterized ORM/database operations
+- Validate API schemas
+- Configure CORS appropriately
+- Keep authentication logic modular
+
+Use synthetic/sample vulnerability data during development.
+
+Do not include real confidential organizational vulnerability records in the repository.
+
+==================================================
+API DESIGN
+==================================================
+
+Create clean REST endpoints based on the existing backend structure.
+
+Suggested endpoints:
+
+POST /api/upload
+POST /api/validate
+POST /api/process
+
+GET /api/dashboard/summary
+GET /api/dashboard/priorities
+GET /api/dashboard/clusters
+
+GET /api/analysis/remediation
+GET /api/analysis/markets/{type}
+
+GET /api/vulnerabilities
+
+Do not create duplicate endpoints unnecessarily.
+
+Use Pydantic request/response schemas.
+
+==================================================
+FRONTEND API INTEGRATION
+==================================================
+
+Create a centralized API layer rather than calling fetch/axios throughout individual components.
+
+Example:
+
+src/
+    services/
+        api.ts
+
+Dashboard components should receive structured data rather than containing business calculations.
+
+Business rules belong in the backend.
+
+Frontend responsibilities:
+
+- User interaction
+- API calls
+- Filters
+- Tables
+- Charts
+- Loading states
+- Empty states
+- Error messages
+- Formatting
+
+Backend responsibilities:
+
+- Validation
+- Cleaning
+- Matching
+- Business rules
+- Calculation
+- Aggregation
+- Database interaction
+
+==================================================
+LOADING AND ERROR STATES
+==================================================
+
+Every API-driven screen should properly handle:
+
+loading
+success
+warning
+empty
+error
+
+Examples:
+
+Processing dataset...
+
+Dataset processed successfully.
+
+Some records require review.
+
+Unable to process uploaded dataset.
+
+Do not allow unexpected backend errors to break the entire React interface.
+
+==================================================
+TESTING
+==================================================
+
+Implement tests progressively.
+
+Backend testing should focus heavily on business rules.
+
+Create test cases for situations such as:
+
+SLA:
+Report End Date < SLA Due Date -> Yes
+Report End Date = SLA Due Date -> No
+Report End Date > SLA Due Date -> No
+Blank SLA -> No SLA
+Blank Report End Date -> No Report End Date
+
+Mapping:
+Australia -> ASEAN
+
+Also test:
+
+Missing Unique Reference ID
+Duplicate IDs
+Invalid dates
+Blank fields
+Unmapped countries
+
+Most importantly, structure the project so processed outputs can be compared against validated Excel outputs.
+
+==================================================
+DEVELOPMENT ORDER
+==================================================
+
+Follow this implementation sequence.
+
+PHASE 1
+Inspect and stabilize existing project structure.
+
+PHASE 2
+Connect React frontend to FastAPI using a simple health/test endpoint.
+
+PHASE 3
+Implement real Excel upload.
+
+PHASE 4
+Implement dataset validation.
+
+PHASE 5
+Create the Pandas processing pipeline.
+
+PHASE 6
+Implement confirmed mapping and SLA rules.
+
+PHASE 7
+Implement remaining confirmed business rules incrementally.
+
+PHASE 8
+Implement summary/pivot-style aggregation.
+
+PHASE 9
+Replace frontend mock dashboard data with backend API responses.
+
+PHASE 10
+Implement Remediation and Markets Analysis.
+
+PHASE 11
+Integrate PostgreSQL.
+
+PHASE 12
+Add automated tests, error handling, and data-quality reporting.
+
+==================================================
+IMPORTANT INSTRUCTIONS FOR WORKING ON THE CODEBASE
+==================================================
+
+Do not rewrite everything in one response.
+
+Work incrementally.
+
+Before modifying files:
+- inspect existing files
+- understand existing architecture
+- preserve existing visual design
+- identify reusable components
+
+At each implementation step:
+
+1. State which files will be modified.
+2. Implement the change.
+3. Keep the project runnable.
+4. Fix TypeScript/Python errors introduced by the change.
+5. Avoid unrelated refactoring.
+6. Do not remove existing working functionality.
+7. Keep mocked functionality available until the corresponding real backend functionality works.
+8. Clearly mark TODOs where business rules still need confirmation.
+
+START NOW WITH PHASE 1 AND PHASE 2 ONLY.
+
+First inspect the existing project.
+
+Then:
+- identify the frontend entry point
+- identify the backend entry point
+- identify existing routes/pages/components
+- identify installed dependencies
+- identify existing environment configuration
+- identify how the prototype pages currently work
+
+After inspection, preserve the existing UI and connect the React frontend to FastAPI using a minimal health endpoint.
+
+Example desired flow:
+
+React
+   |
+   | GET /api/health
+   v
+FastAPI
+
+Backend response:
+
+{
+  "status": "ok"
+}
+
+Frontend should be able to confirm the backend connection without changing the existing interface.
+
+Do not start Excel processing, PostgreSQL, or business-rule implementation until this foundation is working.
