@@ -1,47 +1,479 @@
-For the prototype, use reporting-oriented storage.
+I now want to define the PivotTable-style summary/reporting requirements for
+the Vulnerability Management Reporting Automation System.
 
-Do NOT store a full duplicate of every ~500 MB raw dataset in PostgreSQL for
-each reporting period.
+These summaries currently exist in Excel PivotTables.
 
-The backend should:
+The web application should reproduce the same analytical logic, but the UI
+should be more interactive and reusable rather than creating a separate page
+for every PivotTable.
 
-1. Accept the raw workbook.
-2. Validate it.
-3. Process it using Pandas/business rules.
-4. Extract the fields required for reporting, dashboard filtering,
-   drill-down, validation and historical comparison.
-5. Store the processed reporting records in PostgreSQL.
-6. Store processing-run/report-period metadata separately.
+IMPORTANT:
 
-Create a processing_runs/reporting_period entity containing metadata such as:
+Use the processed dataset after enrichment/calculated fields have been
+generated.
 
-- id
-- report_start_date
-- report_end_date
-- original_filename
-- uploaded_at
-- record_count
-- validation_status
-- processing_status
+Do NOT calculate dashboard totals from the raw unprocessed dataset.
 
-Processed vulnerability records should reference the appropriate processing
-run/reporting period.
+==================================================
+GENERAL COUNTING RULE
+==================================================
 
-Do not assume the application is permitted to permanently retain uploaded raw
-workbooks.
+Throughout these reports:
 
-For the university prototype, raw workbook retention should be temporary/local
-unless a separate retention requirement is later confirmed.
+"Number of Vulnerability"
 
-Keep the architecture flexible so an approved raw-file storage/retention
-mechanism can be added later without redesigning the reporting database.
+means:
 
-Do not delete data required for:
-- reporting
-- dashboard filtering
-- drill-down
-- historical comparisons
-- validation/audit traceability
+COUNT OF UNIQUE REFERENCE ID
 
-The exact final reporting-column list can remain configurable while the
-business rules and dashboard requirements are being completed.
+Use:
+
+distinct count of Unique Reference ID
+
+Do NOT use normal row count if duplicate Unique Reference IDs can exist.
+
+The dashboard/API should use the same counting definition consistently.
+
+
+==================================================
+GENERAL ROW HIERARCHY
+==================================================
+
+For summaries 1-4, the normal row hierarchy is:
+
+Cluster
+    -> ICS Group Country
+
+Example:
+
+North Asia
+    -> China
+    -> KOREA, REPUBLIC OF
+    -> Taiwan
+
+ASEAN
+    -> Australia
+    -> Indonesia
+    -> Malaysia
+    -> Singapore
+    -> Vietnam
+
+The frontend should support expandable/collapsible hierarchy.
+
+Default level:
+
+Cluster
+
+Expanded level:
+
+ICS Group Country
+
+
+==================================================
+SUMMARY 1
+VULNERABILITY PRIORITIZATION - CLUSTER
+(VULNERABILITY VIEW)
+==================================================
+
+Report name:
+
+Vulnerability Prioritization - Cluster (Vulnerability View)
+
+FILTERS:
+
+- Remediation Domain Grouping
+- ICS Hierarchy
+- Within SLA?
+- Remediation Status
+
+COLUMNS:
+
+Prioty
+
+ROWS:
+
+Cluster
+    -> ICS Group Country
+
+VALUES:
+
+Distinct Count of Unique Reference ID
+
+Display meaning:
+
+Number of Vulnerability
+
+
+The resulting structure is conceptually:
+
+Cluster / Country | P1 | P2 | P3 | P4 | Grand Total
+
+
+Example hierarchy:
+
+North Asia
+    China
+    KOREA, REPUBLIC OF
+    Taiwan
+
+
+==================================================
+SUMMARY 2
+WRB VULNERABILITY PRIORITIZATION - CLUSTER
+(VULNERABILITY VIEW)
+==================================================
+
+Report name:
+
+WRB Vulnerability Prioritization - Cluster (Vulnerability View)
+
+IMPORTANT:
+
+Summary 2 uses the SAME aggregation structure as Summary 1.
+
+FILTERS:
+
+- Remediation Domain Grouping
+- ICS Hierarchy
+- Within SLA?
+- Remediation Status
+
+COLUMNS:
+
+Prioty
+
+ROWS:
+
+Cluster
+    -> ICS Group Country
+
+VALUES:
+
+Distinct Count of Unique Reference ID
+
+
+The difference between Summary 1 and Summary 2 comes from FILTER SELECTIONS,
+not from a different aggregation engine.
+
+Therefore:
+
+Do NOT implement Summary 1 and Summary 2 as duplicated backend logic.
+
+Create ONE reusable Vulnerability Prioritization report/dashboard.
+
+The user should be able to change the filters.
+
+For example:
+
+ICS Hierarchy = All
+
+may represent the wider Vulnerability View.
+
+ICS Hierarchy = Wealth and Retail Banking
+
+may represent the WRB view.
+
+Do not hardcode this specific value unless it exists in the dataset/filter
+options.
+
+The frontend should derive available filter values from processed data.
+
+
+==================================================
+SUMMARY 3
+WRB VULNERABILITY PRIORITIZATION - CLUSTER
+(REMEDIATION RATE)
+==================================================
+
+Report name:
+
+WRB Vulnerability Prioritization - Cluster
+(Remediation Rate)
+
+FILTERS:
+
+- Remediation Domain Grouping
+- ICS Hierarchy
+- Business Function
+- Within SLA?
+- Remediation Status
+- SLA Due Date
+- Final Severity Rating
+
+COLUMNS:
+
+Met or Breached SLA
+
+Expected categories may include values such as:
+
+Met SLA
+Breached SLA
+Exception
+Open
+Overdue
+
+Use the actual processed/source values present in this column.
+
+ROWS:
+
+Cluster
+    -> ICS Group Country
+
+VALUES:
+
+Distinct Count of Unique Reference ID
+
+Display meaning:
+
+Number of Vulnerability
+
+
+Conceptual table:
+
+Cluster / Country
+    | Met SLA
+    | Breached SLA
+    | Exception
+    | Open
+    | Overdue
+    | Grand Total
+
+
+==================================================
+SUMMARY 4
+WRB VULNERABILITY PRIORITIZATION - CLUSTER
+(REMEDIATION PLAN)
+==================================================
+
+Report name:
+
+WRB Vulnerability Prioritization - Cluster
+(Remediation Plan)
+
+FILTERS:
+
+- Business Function
+- Remediation Domain Grouping
+- Remediation Status
+- ICS Hierarchy
+- Within SLA?
+- Prioty
+
+COLUMN HIERARCHY:
+
+Planned Remediation (Quarter)
+    -> Planned Remediation (Month)
+
+ROWS:
+
+Cluster
+    -> ICS Group Country
+
+VALUES:
+
+Distinct Count of Unique Reference ID
+
+Display meaning:
+
+Number of Vulnerability
+
+
+The column hierarchy must support expansion.
+
+Default:
+
+Quarter
+
+Example:
+
+2026-Q3
+2026-Q4
+2027-Q1
+2027-Q2
+
+When expanded:
+
+2026-Q4
+    -> Oct-2026
+    -> Nov-2026
+    -> Dec-2026
+
+2027-Q1
+    -> Jan-2027
+    -> Feb-2027
+    -> Mar-2027
+
+
+==================================================
+UNPLANNED REMEDIATION
+==================================================
+
+Confirmed rule:
+
+If Remediation Planned Date is blank:
+
+Remediation Plan classification = Unplanned
+
+Unplanned should appear as a separate reporting category.
+
+Do not assign an artificial month or quarter to an Unplanned record.
+
+
+==================================================
+FILTER BEHAVIOR
+==================================================
+
+I do NOT want to reproduce Excel PivotTables literally.
+
+The web application should provide interactive filter controls.
+
+The user should be able to select one or multiple values from the applicable
+filter fields.
+
+Where appropriate, include:
+
+- All
+- individual values
+- multiple selections
+- Clear Filter / Reset Filters
+
+When filters change:
+
+- summary table updates;
+- totals update;
+- charts update;
+- Grand Total updates.
+
+Do NOT require page reload.
+
+
+==================================================
+IMPORTANT: USER-CONTROLLABLE REPORT BUILDER
+==================================================
+
+In addition to the four predefined report configurations above, I want the
+reporting architecture to be reusable.
+
+The user should be able to choose from the reporting dimensions used by
+Summaries 1-4.
+
+FILTER DIMENSIONS may include:
+
+Remediation Domain Grouping
+ICS Hierarchy
+Within SLA?
+Remediation Status
+Business Function
+SLA Due Date
+Final Severity Rating
+Prioty
+
+ROW DIMENSIONS:
+
+Cluster
+ICS Group Country
+
+The default hierarchy should be:
+
+Cluster
+    -> ICS Group Country
+
+COLUMN DIMENSIONS relevant to these reports:
+
+Prioty
+
+Met or Breached SLA
+
+Planned Remediation (Quarter)
+    -> Planned Remediation (Month)
+
+
+This does NOT mean arbitrary database columns should automatically become
+available.
+
+Only expose approved reporting dimensions.
+
+
+==================================================
+PREDEFINED REPORT VIEWS
+==================================================
+
+Provide predefined report/view options:
+
+1. Vulnerability Prioritization
+2. Remediation Rate
+3. Remediation Plan
+
+The previous Excel reports:
+
+Vulnerability Prioritization - Cluster (Vulnerability View)
+
+and:
+
+WRB Vulnerability Prioritization - Cluster (Vulnerability View)
+
+should use the SAME "Vulnerability Prioritization" report type.
+
+Their difference should be represented through filter selection.
+
+For example:
+
+Report:
+Vulnerability Prioritization
+
+Filters:
+ICS Hierarchy = All
+
+versus:
+
+Report:
+Vulnerability Prioritization
+
+Filters:
+ICS Hierarchy = selected WRB value
+
+
+==================================================
+FRONTEND DESIGN
+==================================================
+
+Keep the existing corporate prototype design.
+
+A suggested reporting interface is:
+
+--------------------------------------------------
+
+Vulnerability Summary
+
+Report View:
+[ Vulnerability Prioritization ▼ ]
+
+Filters
+--------------------------------------------------
+
+Remediation Domain Grouping [ All ▼ ]
+ICS Hierarchy               [ All ▼ ]
+Within SLA                  [ All ▼ ]
+Remediation Status          [ All ▼ ]
+
+[Apply] [Reset]
+
+
+Rows
+--------------------------------------------------
+
+Cluster
+  -> ICS Group Country
+
+
+Columns
+--------------------------------------------------
+
+Prioty
+
+
+Metric
+--------------------------------------------------
+
+Number of Vulnerability
+(Distinct
