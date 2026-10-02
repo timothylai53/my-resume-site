@@ -1,20 +1,213 @@
-  Searched for 3 patterns, listed 1 directory
+Here is the COMPLETE header row in the exact order.
 
-I can't create the file yet: I don't have the exact column header list you mentioned.
+Use these column names exactly as written. Do not correct spelling, rename,
+remove, reorder, or add columns.
 
-This is a new session with no saved memory from earlier conversations. I searched the project (backend/ and frontend/) and couldn't find the full header list. The only fragments are:
-- Unique Reference ID and Country in backend/tests/test_upload.py
-- SLA Due Date and Report End Date in backend/app/rules/sla_rules.py
-- Final Severity Rating in a comment in backend/app/rules/priority_rules.py
-- Country-to-cluster mappings in backend/app/rules/cluster_rules.py, such as Malaysia → ASEAN and China → North Asia. I'll use these for the valid Country values.
+Unique Reference ID
+Unique ID
+Description
+Discovery Method
+Country
+Impacted Area
+SLA Start Date
+SLA Due Date
+Within SLA?
+SLA Days
+SLA Category
+Product/OS
+IP
+Host Name
+Last Detected
+Asset Status
+Asset Capability
+Asset Environment
+Cmdb Review
+CIID
+CI Name
+IBS
+Cluster
+Group Apps
+Prioty
+Risk Assesment Require
+Sustainability Rate Calculation
+URL Scanned
+CVE ID
+OWASP Code
+SBIA Rating
+Remediation Domain
+Remediation Status
+Exception ID
+Exception Category
+Exception Expiry Date
+Baselined Remediation Planned Date
+Remediation Planned Date
+Remediation Closed Date
+Final Severity Rating
+ITO Unit
+Finding Tag SVLM
+Finding Tag RD
+No of Vulnerabilities
+Platform
+Source
+Business Function
+Remediation Domain Grouping
+Average Time To Remediate
+In Scope For Strike Rate
+Met or Breached SLA
+Updated Remediation Status
+New Findings?
+CJ or IF
+Aging by Year
+Aging by Days
+Scope
+Planned Remediation (Quarter)
+Planned Remediation (Month)
+Planned Remediation (Week)
+Closed By Year
+Closed By Year-month
+ICS Hierarchy
+ICS Group Country
+QTD
+MTD
+CVSS Access Vector
+CVSS Privilege Required
+CVSS Vector
+CVSS Version
+CVSS
+EPSS
+Exploit Maturity
+RTI
+Re Opened Closed Count
+Re Opened Remediated Count
+Last Month Remediation Status
+Last Month Remediation Domain Grouping
+Last Month Remediation Domain
+Last Month Final Severity Rating
+Last Month Planned Remediation (Quarter)
+Report Start Date
+Report End Date
+Aging Years
+Due In Months
 
-Your prompt names about 45 columns, but it dor every column name. If I guessed the orderor names, the backend's validation would flag the workbook, which would defeat the purpose of the test data.
+Now create the workbook.
 
-Please paste the full header row in order (c is fine). Once I have it, I'll createsynthetic_vm_test_data.xlsx with:
-- One sheet named "Raw Data", 1 header row and 1,000 data rows
-- Fictional IDs like TEST-VUL-000001, TEST-U-001.example.invalid
-- Real Excel dates spread from Sep-2026 to Apr-2027, covering the before/equal/after/missing SLA cases you listed     - A small number of deliberate validation eret (missing or duplicate IDs, blank Countryor TEST-UNKNOWN, missing dates)
-- The system-calculated fields left blank
-- A report covering the 7 points you asked for
+OUTPUT:
+synthetic_vm_test_data.xlsx
 
-If you'd also like to share the allowed values for columns like Remediation Domain, Business Function, ICS Hierarchy, Discovery Method or Source, I'll use them. Otional placeholder values and list thosecolumns under point 7.
+WORKSHEET:
+Raw Data
+
+ROWS:
+Exactly 1,000 synthetic DATA rows plus 1 header row.
+
+IMPORTANT:
+Do not search the project for another template.
+This list IS the development schema for the synthetic workbook.
+
+All generated data must be fictional and suitable only for software
+development/testing.
+
+Do not attempt to reproduce actual organizational records.
+
+For identifiers use clearly artificial values such as:
+
+TEST-VUL-000001
+TEST-VUL-000002
+
+Unique ID:
+TEST-UID-000001
+
+CIID:
+TEST-CI-000001
+
+CI Name:
+Synthetic Application 001
+
+Host Name:
+test-host-001.example.invalid
+
+For IP addresses, use documentation/test-safe address ranges rather than
+real organizational addresses.
+
+For URL values use example.invalid.
+
+Generate useful synthetic variation across the 1,000 rows.
+
+For Country, use fictional test records distributed among ordinary country
+names needed to exercise the application's mapping logic, plus a small number
+of blank/unmapped cases.
+
+For Final Severity Rating, generate a mixture of:
+
+Critical
+High
+Medium
+Low
+
+Generate varied synthetic values for fields including:
+
+Discovery Method
+Country
+SLA Start Date
+SLA Due Date
+SLA Days
+SLA Category
+Product/OS
+Asset Status
+Asset Capability
+Asset Environment
+IBS
+Remediation Domain
+Remediation Status
+Remediation Planned Date
+Remediation Closed Date
+Final Severity Rating
+Platform
+Source
+Business Function
+Remediation Domain Grouping
+ICS Hierarchy
+ICS Group Country
+Report Start Date
+Report End Date
+
+Use proper Excel date values for date columns.
+
+Create date scenarios covering:
+
+- Report End Date before SLA Due Date
+- Report End Date equal to SLA Due Date
+- Report End Date after SLA Due Date
+- Missing SLA Due Date
+- Missing Report End Date
+- Missing Remediation Planned Date
+
+Distribute Remediation Planned Date across multiple months, including dates
+between September 2026 and April 2027, purely as synthetic development data.
+
+INTENTIONAL VALIDATION CASES:
+
+Insert only a small controlled number:
+
+- 2 rows with blank Unique Reference ID
+- 4 rows sharing duplicate synthetic Unique Reference IDs
+- 3 rows with blank Country
+- 3 rows with Country = TEST-UNKNOWN
+- 5 rows with blank SLA Due Date
+- 5 rows with blank Report End Date
+- 10 rows with blank Remediation Planned Date
+
+These are intentional test cases and should be mentioned in the final report.
+
+CALCULATED FIELDS:
+
+Leave these blank for now because the application should eventually calculate
+them:
+
+Within SLA?
+Cluster
+Prioty
+Sustainability Rate Calculation
+Average Time To Remediate
+Met or Breached SLA
+Updated
