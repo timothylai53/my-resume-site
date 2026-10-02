@@ -1,37 +1,147 @@
-What I still need
+Additional confirmed business rules:
 
-1. Which column decides the cluster? The mapping sheet's header is ICS Group Country, so I'll map from that column. But your unmapped test case (TEST-UNKNOWN) is in Country. In those 3 rows, ICS Group Country is Australia, Singapore and Taiwan, which do map. So, either:
-- the cluster comes from ICS Group Country and the test case needs to move to that column; or
-- it comes from Country. In that case, should Country be used when ICS Group Country is blank?
+1. GROUP APPS
 
-2. The Business Function mapping doesn't match any column in the data. The mapping expects source values *CSR*, AVS, IVS, PT and SPM. The data's Business Function column contains TEST-BF Finance and similar, and Source contains TEST-SCANNER-A and similar. Which raw column holds these values? Also, is *CSR* a "contains CSR" match? Once this is clear, the test data will need some rows that use those values.
+Group Apps is not confirmed yet.
 
-3. Priority needs an IBS flag, but the IBS column has been removed. The Prioty sheet uses IBS in four of its five conditions. I need to know:
-- Where IBS comes from: should the column come back, or is it derived from something else?
-- What the conditions mean in terms of CJ or IF. My reading is below. Please confirm or correct it, especially "Non IF (IBS, CJ)": does it mean IBS or CJ, or IBS and CJ?
+Leave this calculated/enrichment field blank for now.
 
-| Condition            | Meaning, as I read it  |
-|----------------------|------------------------|
-| IF (CJ)              | CJ or IF = IF-CJ       |
-| IF (IBS)             | IF and IBS             |
-| IF (non CJ, non IBS) | IF and not IBS         |
-| Non IF (IBS, CJ)     | CJ, or Others with IBS |
-| Others               | Others and not IBS     |
+Do not invent or implement a rule.
 
-- What happens when more than one condition matches, for example IF-CJ on an IBS record? I'll check the conditions top to bottom unless you tell me otherwise.
+Add a TODO for the business rule to be provided later.
 
-4. Are these columns inputs or calculated? Met or Breached SLA, Updated Remediation Status and New Findings? are now filled in. Earlier you listed them as columns for the app to calculate. The values also contradict each other: 122 records are Closed but show Overdue, and 57 are Closed but show Open. That looks like random test data, not correct expected results. Should I read them as source data, or ignore them and calculate them later once you give me the rules?
 
-5. Some test cases have been lost. Report End Date is now always filled, so the "blank Report End Date" case has gone. Only 3 rows have an end date equal to the SLA Due Date. That's fine if it was intended, and the automated tests cover those rules anyway.
+2. RISK ASSESMENT REQUIRE
 
-6. Remediation buckets (for Phase 7). Is "Plan Date Expired" defined as Remediation Planned Date earlier than Report End Date? And at what point does the report switch from showing months to showing quarters?
+Risk Assesment Require is not confirmed yet.
 
-What can go ahead now
+Leave this calculated/enrichment field blank for now.
 
-Nothing above blocks Phase 4 (validation). If you're happy with my earlier proposal for required columns, I can start now with:
-- checks that the columns match what's expected;
-- checks for blank and duplicate IDs;
-- checks that dates are valid;
-- unmapped-country checks against your mapping file.
+Do not invent or implement a rule.
 
-The mapping file would be loaded as configuration rather than hardcoded, so you can update the mappings without code changes. Questions 1–4 only need answers before Phase 5–7.
+Add a TODO for the business rule to be provided later.
+
+
+3. UNPLANNED REMEDIATION
+
+Use Remediation Planned Date to determine whether a vulnerability has a
+remediation plan.
+
+If:
+
+Remediation Planned Date is blank
+
+then classify the remediation plan as:
+
+Unplanned
+
+This is a confirmed rule.
+
+
+4. PLANNED REMEDIATION HIERARCHY
+
+For records with a valid Remediation Planned Date, the main remediation
+planning view should group records by QUARTER first.
+
+The user should then be able to expand a Quarter to see its MONTHS.
+
+Hierarchy:
+
+Quarter
+    -> Month
+
+Examples:
+
+2026-Q3
+    -> Sep-2026
+
+2026-Q4
+    -> Oct-2026
+    -> Nov-2026
+    -> Dec-2026
+
+2027-Q1
+    -> Jan-2027
+    -> Feb-2027
+    -> Mar-2027
+
+2027-Q2
+    -> Apr-2027
+    -> May-2027
+    -> Jun-2027
+
+Do NOT implement a rule where some future dates automatically display as
+months and later dates automatically display as quarters.
+
+Quarter is the parent grouping.
+
+Month is the expandable child grouping.
+
+
+5. QUARTER DERIVATION
+
+Derive Planned Remediation (Quarter) from Remediation Planned Date.
+
+Standard calendar-quarter grouping:
+
+January-March -> Q1
+April-June -> Q2
+July-September -> Q3
+October-December -> Q4
+
+Display format:
+
+YYYY-Q#
+
+Examples:
+
+15-Sep-2026 -> 2026-Q3
+15-Oct-2026 -> 2026-Q4
+15-Jan-2027 -> 2027-Q1
+15-Apr-2027 -> 2027-Q2
+
+
+6. MONTH DERIVATION
+
+Derive Planned Remediation (Month) from Remediation Planned Date.
+
+Display format:
+
+MMM-YYYY
+
+Examples:
+
+15-Sep-2026 -> Sep-2026
+31-Dec-2026 -> Dec-2026
+16-Apr-2027 -> Apr-2027
+
+Keep the underlying value as a real date/date-derived value where appropriate
+so chronological sorting is preserved.
+
+Do not sort month names alphabetically.
+
+
+7. DASHBOARD BEHAVIOR
+
+The Remediation Plan dashboard should initially show:
+
+2026-Q3
+2026-Q4
+2027-Q1
+2027-Q2
+...
+Unplanned
+
+A quarter can be expanded to show its months.
+
+Example:
+
+[-] 2026-Q4
+       Oct-2026
+       Nov-2026
+       Dec-2026
+
+[+] 2027-Q1
+
+Unplanned should remain a separate category because there is no date from
+which a quarter or month can be calculated.
