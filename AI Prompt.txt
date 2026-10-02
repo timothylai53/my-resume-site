@@ -1,44 +1,161 @@
-Create a NEW Excel file named:
+Create a NEW Excel workbook named:
 
 synthetic_vm_test_data.xlsx
 
-Do NOT search for, request, or depend on an existing Excel template.
+Generate exactly 1,000 synthetic data rows, excluding the header row.
 
-I am not providing the original company template.
+Do NOT search for or depend on an existing Excel template.
 
-Create the synthetic workbook from scratch using the exact column headers
-I provide below.
+Use the exact column headers I previously provided and preserve:
+- Exact column names
+- Exact column order
+- One worksheet named "Raw Data"
 
-Create one worksheet named:
+All 1,000 records must be completely synthetic and used only for development
+and testing of the Vulnerability Management Reporting Automation System.
 
-Raw Data
+==================================================
+SYNTHETIC IDENTIFIERS
+==================================================
 
-Use the column headers exactly as provided, in exactly the same order.
+Generate obviously fictional identifiers.
 
-Generate 100 completely synthetic test records.
+Examples:
 
-IMPORTANT:
-- Do not use real company data.
-- Do not generate realistic internal asset information.
-- Use obviously fictional identifiers.
-- Use example.invalid for any synthetic hostname/URL if needed.
-- Use synthetic values only.
-- This workbook is for development and testing.
-
-Unique Reference IDs should look like:
-
+Unique Reference ID:
 TEST-VUL-000001
 TEST-VUL-000002
-TEST-VUL-000003
+...
+TEST-VUL-001000
 
-Generate appropriate synthetic values for input fields.
+Unique ID:
+TEST-UID-000001
+TEST-UID-000002
 
-For calculated/output fields such as:
+CIID:
+TEST-CI-000001
+
+CI Name:
+Synthetic Application 001
+
+Host Name:
+test-host-001.example.invalid
+
+Do NOT use or imitate real organizational identifiers, applications,
+hostnames, IP addresses, vulnerability records, or other confidential data.
+
+==================================================
+DATA VARIATION
+==================================================
+
+Create sufficient variation across the 1,000 rows so the dataset can later
+be used to test:
+
+- Dataset validation
+- Data cleaning
+- Cluster mapping
+- SLA calculation
+- Priority calculation
+- Remediation analysis
+- Pivot-style summaries
+- Dashboard charts
+- Dashboard filters
+
+Generate varied synthetic values for appropriate input columns, including:
+
+- Country
+- SLA Start Date
+- SLA Due Date
+- SLA Days
+- SLA Category
+- Report Start Date
+- Report End Date
+- Final Severity Rating
+- Remediation Domain
+- Remediation Status
+- Remediation Planned Date
+- Remediation Closed Date
+- Business Function
+- ICS Hierarchy
+- ICS Group Country
+- Discovery Method
+- Product/OS
+- Platform
+- Source
+
+Where appropriate, distribute records across multiple countries and reporting
+periods so dashboard summaries contain meaningful variation.
+
+==================================================
+DATE DATA
+==================================================
+
+Use proper Excel date values, not simple text strings.
+
+Create different scenarios including:
+
+- Report End Date before SLA Due Date
+- Report End Date equal to SLA Due Date
+- Report End Date after SLA Due Date
+- Missing SLA Due Date
+- Missing Report End Date
+- Missing Remediation Planned Date
+
+Create remediation dates across multiple months so later testing can produce
+month-year values such as:
+
+Sep-2026
+Oct-2026
+Nov-2026
+Dec-2026
+Jan-2027
+Feb-2027
+Mar-2027
+Apr-2027
+
+Do not calculate the displayed month-year field yet.
+
+==================================================
+INTENTIONAL VALIDATION ERRORS
+==================================================
+
+Most rows should contain valid synthetic data.
+
+However, intentionally insert a small controlled number of validation cases
+so Phase 4 can verify that validation works.
+
+Include:
+
+- Missing Unique Reference ID records
+- Duplicate Unique Reference ID records
+- Blank Country records
+- Unmapped fictional Country values such as TEST-UNKNOWN
+- Missing SLA Due Date records
+- Missing Report End Date records
+- Missing Remediation Planned Date records
+- Missing optional values
+
+Keep these intentional errors distributed across the dataset.
+
+Do NOT accidentally create hundreds of invalid records.
+
+==================================================
+SYSTEM-GENERATED FIELDS
+==================================================
+
+Leave system-calculated/output fields blank where their business rules have
+not yet been applied.
+
+Examples include:
 
 Within SLA?
 Cluster
 Prioty
+Sustainability Rate Calculation
+Average Time To Remediate
 Met or Breached SLA
+Updated Remediation Status
+New Findings?
 CJ or IF
 Aging by Year
 Aging by Days
@@ -52,40 +169,41 @@ MTD
 Aging Years
 Due In Months
 
-leave them blank for now because the application will calculate them.
+Do NOT invent calculations for these fields.
 
-For date fields, generate proper Excel date values rather than text.
+These fields will later be generated by the backend processing engine.
 
-Include intentional validation test cases:
-- 1 missing Unique Reference ID
-- 2 duplicate Unique Reference IDs
-- blank Country
-- unmapped test Country
-- missing SLA Due Date
-- missing Report End Date
-- missing Remediation Planned Date
-- Report End Date before SLA Due Date
-- Report End Date equal to SLA Due Date
-- Report End Date after SLA Due Date
+==================================================
+OUTPUT
+==================================================
 
-Use different synthetic:
-- Severity ratings
-- Remediation statuses
-- Remediation domains
-- Countries
-- Business functions
-- Discovery methods
+Create exactly:
 
-Do not invent business calculation rules.
+1 header row
++
+1,000 synthetic data rows
 
-I will provide the exact list of column headers after this instruction.
+Save the file as:
 
-Once created:
-1. Save synthetic_vm_test_data.xlsx
-2. Confirm the worksheet name
-3. Confirm number of rows created
-4. List intentional validation cases inserted
-5. List columns intentionally left blank
+synthetic_vm_test_data.xlsx
 
-START by creating the Excel file.
-Do not search for an existing template.
+After creating the workbook, report:
+
+1. Workbook filename
+2. Worksheet name
+3. Number of data rows generated
+4. Number of columns
+5. Intentional validation scenarios inserted
+6. Columns intentionally left blank
+7. Any columns that could not be populated because their permitted values or
+business meaning are unknown
+
+IMPORTANT:
+
+Actually CREATE the Excel file.
+
+Do not only provide Python code for generating it.
+Do not only describe how to create it.
+Do not search for a template.
+Do not ask for real organizational data.
+Create synthetic_vm_test_data.xlsx directly.
