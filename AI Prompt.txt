@@ -1,45 +1,36 @@
-I now want to define the PivotTable-style summary/reporting requirements for
-the Vulnerability Management Reporting Automation System.
-
-These summaries currently exist in Excel PivotTables.
-
-The web application should reproduce the same analytical logic, but the UI
-should be more interactive and reusable rather than creating a separate page
-for every PivotTable.
+Implement the following PivotTable-style summary requirements for my
+Vulnerability Management Reporting Automation System.
 
 IMPORTANT:
+These reports must use the PROCESSED dataset after business-rule enrichment.
 
-Use the processed dataset after enrichment/calculated fields have been
-generated.
-
-Do NOT calculate dashboard totals from the raw unprocessed dataset.
-
-==================================================
-GENERAL COUNTING RULE
-==================================================
-
-Throughout these reports:
-
-"Number of Vulnerability"
-
-means:
-
-COUNT OF UNIQUE REFERENCE ID
-
-Use:
-
-distinct count of Unique Reference ID
-
-Do NOT use normal row count if duplicate Unique Reference IDs can exist.
-
-The dashboard/API should use the same counting definition consistently.
-
+Do not reproduce Excel PivotTables literally. Build reusable backend
+aggregation and frontend filter/table components.
 
 ==================================================
-GENERAL ROW HIERARCHY
+GENERAL RULES
 ==================================================
 
-For summaries 1-4, the normal row hierarchy is:
+METRIC:
+
+"Number of Vulnerability" means:
+
+DISTINCT COUNT of Unique Reference ID
+
+Do NOT use normal row count.
+
+Example:
+
+Unique Reference ID:
+A
+A
+B
+C
+
+Number of Vulnerability = 3, NOT 4.
+
+
+ROW HIERARCHY FOR ALL REPORTS:
 
 Cluster
     -> ICS Group Country
@@ -51,40 +42,28 @@ North Asia
     -> KOREA, REPUBLIC OF
     -> Taiwan
 
-ASEAN
-    -> Australia
-    -> Indonesia
-    -> Malaysia
-    -> Singapore
-    -> Vietnam
+Allow expand/collapse:
 
-The frontend should support expandable/collapsible hierarchy.
+[+] North Asia
 
-Default level:
-
-Cluster
-
-Expanded level:
-
-ICS Group Country
+[-] North Asia
+      China
+      KOREA, REPUBLIC OF
+      Taiwan
 
 
 ==================================================
-SUMMARY 1
+REPORT 1
 VULNERABILITY PRIORITIZATION - CLUSTER
 (VULNERABILITY VIEW)
 ==================================================
 
-Report name:
-
-Vulnerability Prioritization - Cluster (Vulnerability View)
-
 FILTERS:
 
-- Remediation Domain Grouping
-- ICS Hierarchy
-- Within SLA?
-- Remediation Status
+1. Remediation Domain Grouping
+2. ICS Hierarchy
+3. Within SLA?
+4. Remediation Status
 
 COLUMNS:
 
@@ -99,44 +78,27 @@ VALUES:
 
 Distinct Count of Unique Reference ID
 
-Display meaning:
+Display the value as:
 
 Number of Vulnerability
 
-
-The resulting structure is conceptually:
+Expected table structure:
 
 Cluster / Country | P1 | P2 | P3 | P4 | Grand Total
 
 
-Example hierarchy:
-
-North Asia
-    China
-    KOREA, REPUBLIC OF
-    Taiwan
-
-
 ==================================================
-SUMMARY 2
+REPORT 2
 WRB VULNERABILITY PRIORITIZATION - CLUSTER
 (VULNERABILITY VIEW)
 ==================================================
 
-Report name:
-
-WRB Vulnerability Prioritization - Cluster (Vulnerability View)
-
-IMPORTANT:
-
-Summary 2 uses the SAME aggregation structure as Summary 1.
-
 FILTERS:
 
-- Remediation Domain Grouping
-- ICS Hierarchy
-- Within SLA?
-- Remediation Status
+1. Remediation Domain Grouping
+2. ICS Hierarchy
+3. Within SLA?
+4. Remediation Status
 
 COLUMNS:
 
@@ -152,59 +114,52 @@ VALUES:
 Distinct Count of Unique Reference ID
 
 
-The difference between Summary 1 and Summary 2 comes from FILTER SELECTIONS,
-not from a different aggregation engine.
+IMPORTANT:
+
+Report 1 and Report 2 use EXACTLY the same aggregation structure.
+
+The difference is only FILTER SELECTION.
 
 Therefore:
 
-Do NOT implement Summary 1 and Summary 2 as duplicated backend logic.
+DO NOT create two separate backend implementations.
 
-Create ONE reusable Vulnerability Prioritization report/dashboard.
+Create ONE reusable report:
 
-The user should be able to change the filters.
+Vulnerability Prioritization
 
-For example:
+For example, the user may select:
 
 ICS Hierarchy = All
 
-may represent the wider Vulnerability View.
+or:
 
 ICS Hierarchy = Wealth and Retail Banking
 
-may represent the WRB view.
-
-Do not hardcode this specific value unless it exists in the dataset/filter
-options.
-
-The frontend should derive available filter values from processed data.
+The same report component should update based on the selected filters.
 
 
 ==================================================
-SUMMARY 3
+REPORT 3
 WRB VULNERABILITY PRIORITIZATION - CLUSTER
 (REMEDIATION RATE)
 ==================================================
 
-Report name:
-
-WRB Vulnerability Prioritization - Cluster
-(Remediation Rate)
-
 FILTERS:
 
-- Remediation Domain Grouping
-- ICS Hierarchy
-- Business Function
-- Within SLA?
-- Remediation Status
-- SLA Due Date
-- Final Severity Rating
+1. Remediation Domain Grouping
+2. ICS Hierarchy
+3. Business Function
+4. Within SLA?
+5. Remediation Status
+6. SLA Due Date
+7. Final Severity Rating
 
 COLUMNS:
 
 Met or Breached SLA
 
-Expected categories may include values such as:
+Possible values include:
 
 Met SLA
 Breached SLA
@@ -212,8 +167,6 @@ Exception
 Open
 Overdue
 
-Use the actual processed/source values present in this column.
-
 ROWS:
 
 Cluster
@@ -223,41 +176,35 @@ VALUES:
 
 Distinct Count of Unique Reference ID
 
-Display meaning:
+Display as:
 
 Number of Vulnerability
 
-
-Conceptual table:
+Expected structure:
 
 Cluster / Country
-    | Met SLA
-    | Breached SLA
-    | Exception
-    | Open
-    | Overdue
-    | Grand Total
+| Met SLA
+| Breached SLA
+| Exception
+| Open
+| Overdue
+| Grand Total
 
 
 ==================================================
-SUMMARY 4
+REPORT 4
 WRB VULNERABILITY PRIORITIZATION - CLUSTER
 (REMEDIATION PLAN)
 ==================================================
 
-Report name:
-
-WRB Vulnerability Prioritization - Cluster
-(Remediation Plan)
-
 FILTERS:
 
-- Business Function
-- Remediation Domain Grouping
-- Remediation Status
-- ICS Hierarchy
-- Within SLA?
-- Prioty
+1. Business Function
+2. Remediation Domain Grouping
+3. Remediation Status
+4. ICS Hierarchy
+5. Within SLA?
+6. Prioty
 
 COLUMN HIERARCHY:
 
@@ -273,207 +220,287 @@ VALUES:
 
 Distinct Count of Unique Reference ID
 
-Display meaning:
+Display as:
 
 Number of Vulnerability
 
 
-The column hierarchy must support expansion.
+==================================================
+REMEDIATION PLAN HIERARCHY
+==================================================
 
-Default:
-
-Quarter
+The Remediation Plan should normally display QUARTER first.
 
 Example:
 
-2026-Q3
-2026-Q4
-2027-Q1
-2027-Q2
+[+] 2026-Q3
+[+] 2026-Q4
+[+] 2027-Q1
+[+] 2027-Q2
 
-When expanded:
+The user can expand a quarter to see months.
 
-2026-Q4
-    -> Oct-2026
-    -> Nov-2026
-    -> Dec-2026
+Example:
 
-2027-Q1
-    -> Jan-2027
-    -> Feb-2027
-    -> Mar-2027
+[-] 2026-Q4
+      Oct-2026
+      Nov-2026
+      Dec-2026
+
+[-] 2027-Q1
+      Jan-2027
+      Feb-2027
+      Mar-2027
+
+Quarter derivation:
+
+Jan-Mar -> Q1
+Apr-Jun -> Q2
+Jul-Sep -> Q3
+Oct-Dec -> Q4
+
+Quarter display:
+
+YYYY-Q#
+
+Month display:
+
+MMM-YYYY
+
+Keep chronological sorting.
 
 
 ==================================================
-UNPLANNED REMEDIATION
+UNPLANNED
 ==================================================
 
 Confirmed rule:
 
-If Remediation Planned Date is blank:
+If:
 
-Remediation Plan classification = Unplanned
+Remediation Planned Date is blank
 
-Unplanned should appear as a separate reporting category.
+then:
 
-Do not assign an artificial month or quarter to an Unplanned record.
+Remediation Plan = Unplanned
+
+Unplanned should appear as a separate category.
+
+Do NOT assign a fake Month or Quarter to an Unplanned vulnerability.
+
+
+==================================================
+IMPORTANT REPORT CONSOLIDATION
+==================================================
+
+There are four existing Excel PivotTable summaries, but the web application
+only needs THREE reusable report modes:
+
+1. Vulnerability Prioritization
+2. Remediation Rate
+3. Remediation Plan
+
+Report 1 and Report 2 are the SAME report type with different filter
+selections.
+
+Do not duplicate them.
+
+
+==================================================
+FRONTEND REPORT SELECTOR
+==================================================
+
+Create a report selector:
+
+Report View:
+
+[ Vulnerability Prioritization ▼ ]
+
+Options:
+
+- Vulnerability Prioritization
+- Remediation Rate
+- Remediation Plan
+
+
+When:
+
+Vulnerability Prioritization
+
+is selected, show these filters:
+
+- Remediation Domain Grouping
+- ICS Hierarchy
+- Within SLA?
+- Remediation Status
+
+Columns:
+
+Prioty
+
+
+When:
+
+Remediation Rate
+
+is selected, show:
+
+- Remediation Domain Grouping
+- ICS Hierarchy
+- Business Function
+- Within SLA?
+- Remediation Status
+- SLA Due Date
+- Final Severity Rating
+
+Columns:
+
+Met or Breached SLA
+
+
+When:
+
+Remediation Plan
+
+is selected, show:
+
+- Business Function
+- Remediation Domain Grouping
+- Remediation Status
+- ICS Hierarchy
+- Within SLA?
+- Prioty
+
+Columns:
+
+Planned Remediation (Quarter)
+    -> Planned Remediation (Month)
 
 
 ==================================================
 FILTER BEHAVIOR
 ==================================================
 
-I do NOT want to reproduce Excel PivotTables literally.
+Filters must be interactive.
 
-The web application should provide interactive filter controls.
-
-The user should be able to select one or multiple values from the applicable
-filter fields.
-
-Where appropriate, include:
+Allow:
 
 - All
-- individual values
-- multiple selections
-- Clear Filter / Reset Filters
+- Single selection
+- Multiple selections where appropriate
+- Reset filters
+
+Filter options should come from the processed data where appropriate.
 
 When filters change:
 
-- summary table updates;
-- totals update;
-- charts update;
-- Grand Total updates.
+- KPI values update
+- summary table updates
+- charts update
+- subtotals update
+- Grand Total updates
 
-Do NOT require page reload.
+Do NOT reload the whole React application.
 
 
 ==================================================
-IMPORTANT: USER-CONTROLLABLE REPORT BUILDER
+USER SELECTABLE ROWS
 ==================================================
 
-In addition to the four predefined report configurations above, I want the
-reporting architecture to be reusable.
-
-The user should be able to choose from the reporting dimensions used by
-Summaries 1-4.
-
-FILTER DIMENSIONS may include:
-
-Remediation Domain Grouping
-ICS Hierarchy
-Within SLA?
-Remediation Status
-Business Function
-SLA Due Date
-Final Severity Rating
-Prioty
-
-ROW DIMENSIONS:
-
-Cluster
-ICS Group Country
-
-The default hierarchy should be:
+The primary/default row hierarchy is:
 
 Cluster
     -> ICS Group Country
 
-COLUMN DIMENSIONS relevant to these reports:
+However, make the reporting component reusable so the user can choose the
+approved row dimensions used by these reports.
 
-Prioty
-
-Met or Breached SLA
-
-Planned Remediation (Quarter)
-    -> Planned Remediation (Month)
-
-
-This does NOT mean arbitrary database columns should automatically become
-available.
-
-Only expose approved reporting dimensions.
-
-
-==================================================
-PREDEFINED REPORT VIEWS
-==================================================
-
-Provide predefined report/view options:
-
-1. Vulnerability Prioritization
-2. Remediation Rate
-3. Remediation Plan
-
-The previous Excel reports:
-
-Vulnerability Prioritization - Cluster (Vulnerability View)
-
-and:
-
-WRB Vulnerability Prioritization - Cluster (Vulnerability View)
-
-should use the SAME "Vulnerability Prioritization" report type.
-
-Their difference should be represented through filter selection.
-
-For example:
-
-Report:
-Vulnerability Prioritization
-
-Filters:
-ICS Hierarchy = All
-
-versus:
-
-Report:
-Vulnerability Prioritization
-
-Filters:
-ICS Hierarchy = selected WRB value
-
-
-==================================================
-FRONTEND DESIGN
-==================================================
-
-Keep the existing corporate prototype design.
-
-A suggested reporting interface is:
-
---------------------------------------------------
-
-Vulnerability Summary
-
-Report View:
-[ Vulnerability Prioritization ▼ ]
-
-Filters
---------------------------------------------------
-
-Remediation Domain Grouping [ All ▼ ]
-ICS Hierarchy               [ All ▼ ]
-Within SLA                  [ All ▼ ]
-Remediation Status          [ All ▼ ]
-
-[Apply] [Reset]
-
-
-Rows
---------------------------------------------------
+Approved row dimensions:
 
 Cluster
-  -> ICS Group Country
+ICS Group Country
+
+Default:
+
+Cluster -> ICS Group Country
+
+Do NOT expose every database column as a row dimension.
 
 
-Columns
---------------------------------------------------
+==================================================
+USER SELECTABLE FILTERS
+==================================================
 
+Across these reporting modes, support these approved filter dimensions where
+applicable:
+
+Remediation Domain Grouping
+ICS Hierarchy
+Business Function
+Within SLA?
+Remediation Status
+SLA Due Date
+Final Severity Rating
 Prioty
 
+Do not expose arbitrary database columns.
 
-Metric
---------------------------------------------------
 
-Number of Vulnerability
-(Distinct
+==================================================
+BACKEND ARCHITECTURE
+==================================================
+
+Do NOT implement each report using completely separate duplicated code.
+
+Create a reusable summary/reporting service.
+
+Conceptually:
+
+generate_report(
+    report_type,
+    filters,
+    row_dimensions,
+    column_dimensions
+)
+
+All three report modes use this metric:
+
+DISTINCT COUNT of Unique Reference ID
+
+
+Processing:
+
+Processed Reporting Dataset
+        ↓
+Apply Filters
+        ↓
+Group by Row Dimensions
+        ↓
+Group by Column Dimensions
+        ↓
+Distinct Count Unique Reference ID
+        ↓
+Calculate Subtotals
+        ↓
+Calculate Grand Total
+        ↓
+Return structured JSON
+        ↓
+React Dashboard
+
+
+==================================================
+BUSINESS RULES VS REPORTING
+==================================================
+
+Keep the two systems separate.
+
+BUSINESS RULE PROCESSING handles:
+
+Within SLA
+IBS
+Cluster
+Business Function Mapping
+Prioty
+Planned Remediation Quarter
+Planned
