@@ -1,97 +1,714 @@
-Here's how a summary is produced, from the moment you open a report to the numbers on the screen.
+The current summary visualization is largely correct.
 
-1. The data it starts from
+Keep the existing three-report design:
 
-The summaries never read your Excel file. When you click Process, each record is enriched once with the rule outputs (Cluster, IBS, Mapped Business Function, Within SLA?, Prioty, Quarter, Month) and stored in PostgreSQL as one processing run.
+1. Vulnerability Prioritization
+2. Remediation Rate
+3. Remediation Plan
 
-A report always uses the latest completed run. That run is loaded into memory once, so changing a filter doesn't read the database again.
+Keep the existing:
 
-2. What happens when you open a view or change a filter
+- Corporate dashboard design
+- Filters
+- KPI cards
+- Charts
+- Hierarchical tables
+- Expand/collapse
+- Distinct-count calculations
+- Drill-down behavior
 
-The page asks the backend for one report, for example:
-GET /api/reports/remediation_rate?remediation_status=Open&remediation_status=In Progress
-The backend then works through these steps (backend/app/reporting/service.py):
+Do NOT redesign the interface from scratch.
 
-Step 1 — Filter. It keeps only the records that match every selected filter.
-- Selecting several values in one filter means "any of these".
-- Different filters must all match.
-- An empty filter means All.
-- The SLA Due Date filter keeps dates between From and To, inclusive.
-- On Vulnerability Prioritization only: records with a blank Prioty are set aside unless Include Blank Priority is ticked, and the number set aside is reported.
+Apply the following refinements.
 
-Step 2 — Group into rows. Each remaining record is placed under its Cluster, and within it under its ICS Group Country. A blank value becomes its own row, labelled "NA" or "(blank)".
+==================================================
+1. BLANK PRIOTY
+==================================================
 
-Step 3 — Group into columns. The column depends on the view:
-- Vulnerability Prioritization: Prioty (P1–P4)
-- Remediation Rate: Met or Breached SLA
-- Remediation Plan: Quarter, and also Month underneath. Unplanned records get a quarter column only, with no month.
+Keep:
 
-Step 4 — Count. Every number is a distinct count of Unique Reference ID, and each one is calculated separately from the records behind it:
-- cell (e.g. ASEAN × Open): distinct IDs that are ASEAN and Open
-- row total (e.g. ASEAN): distinct IDs in ASEAN, in any column
-- **column total
-Interrupted · What should Claude do instead?
+Include Blank Priority
 
-> can you tell me how you do the summary ? i mean what user see right now
+optional and OFF by default.
 
-Here's what you see on the Vulnerability Summary pages and how to use them.
+The normal Vulnerability Prioritization report should display:
 
-Getting there
+P1
+P2
+P3
+P4
 
-The sidebar's Vulnerability Summary section has three links, one per report:
-- Vulnerability Prioritization (the default page)
-- Remediation Rate
-- Remediation Plan
+Do not show "(blank)" as a normal Priority category unless the user enables:
 
-You can also switch between them with the Report View dropdown at the top of the page.
+Include Blank Priority
 
-What's on the page, top to bottom
+Keep an explanatory message such as:
 
-1. Header. The report name, plus "Data as of 31 Aug 2026" and the file name of the processed dataset.
+"562 vulnerabilities without Prioty are excluded from this view."
 
-2. Report setup card
-- Report View: which of the three reports you're looking at.
-- Rows: Cluster → ICS Group Country (the default), Cluster only, or ICS Group Country only.
-- Columns: shows what the columns are, for example Prioty.
-- Metric: "Number of Vulnerability (distinct Unique Reference ID)".
+Do not hardcode 562.
 
-3. Filters card. Each report shows only its own filters:
+Calculate the excluded count dynamically from the selected processing run and
+current applicable filters.
 
-┌─────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────┐
-│         Report          │                                        Filters                                        │
-├─────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
-│ Vulnerability           │ Remediation Domain Grouping, ICS Hierarchy, Within SLA?, Remediation Status, and the  │
-│ Prioritization          │ Include Blank Priority tick-box                                                       │
-├─────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
-│ Remediation Rate        │ the same four, plus Business Function (IVS / AVS / PT / CVE), SLA Due Date (from–to   │
-│                         │ dates) and Final Severity Rating                                                      │
-├─────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
-│ Remediation Plan        │ Business Function, Remediation Domain Grouping, Remediation Status, ICS Hierarchy,    │
-│                         │ Within SLA?, Prioty                                                                   │
-└─────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────┘
+==================================================
+2. VULNERABILITY PRIORITIZATION KPI CARDS
+==================================================
 
-- Click a filter to tick one or more values. It then shows "All", the one value you picked, or "2 selected".
-- Reset filters clears them all.
-- Everything below updates straight away, without reloading the page.
+Show:
 
-4. KPI cards. One card for the total Number of Vulnerability, then one card per column with its share of the total:
-- Prioritization: P1, P2, P3, P4. The total card says "Excludes 562 without Prioty".
-- Remediation Rate: Met SLA, Breached SLA, Exception, Open, Overdue.
-- Remediation Plan: each quarter and Unplanned.
+Total Vulnerabilities
+P1
+P2
+P3
+P4
 
-5. Chart and Distribution.
-- Left: a stacked bar for each cluster, split by the report's columns, with a legend.
-- Right: each column's count and percentage of the total.
+Each Priority card may also display its percentage of the currently included
+Priority population.
 
-6. The summary table. This is the PivotTable equivalent.
-- Rows: clusters, collapsed at first. Click ▸ next to a cluster, or Expand rows, to see its ICS Group Countries. NA and Check Mapping are listed last.
-- Columns: P1–P4, the SLA outcomes, or the quarters.
-- On Remediation Plan: click ▸ on a quarter, or Expand months, to show its months followed by a "Quarter Total" column. Unplanned has no months.
-- Grand Total is the last column and the bottom row.
+Example conceptually:
 
-7. Click any number to see its records. A panel opens from the right listing those vulnerabilities: ID, cluster, ICS Group Country, CIID, IBS, severity, priority, Within SLA?, status, Met or Breached SLA, planned month and any data-quality issues. The panel shows 50 records per page, and Esc closes it.
+P1
+120
+12.4%
 
-Things you might notice
+Do not calculate percentages against records that have already been excluded
+from the Priority report.
 
-- Prioritization shows 438, while the other two views show 1,000. That's because records with a blank Prioty are hidden by default. Tick Include Blank Priority to add them back as a "(blank)" column.
-- Every number is a distinct count of IDs. When an ID appears in more than one country or category, a total can be lower than its parts added together. The table's subtitle says so.
+==================================================
+3. REMEDIATION RATE KPI CARDS
+==================================================
+
+Show:
+
+Total Vulnerabilities
+Met SLA
+Breached SLA
+Exception
+Open
+Overdue
+
+Counts must respond to the currently selected filters.
+
+If percentages are displayed, calculate them using the currently filtered
+report population.
+
+==================================================
+4. REMEDIATION PLAN KPI CARDS
+==================================================
+
+Do NOT create one KPI card for every Quarter.
+
+As reporting periods grow, this would make the dashboard cluttered.
+
+Instead, show high-level cards:
+
+Total Vulnerabilities
+Planned
+Unplanned
+
+Confirmed:
+
+Remediation Planned Date blank
+-> Unplanned
+
+A record with a valid Remediation Planned Date is part of Planned.
+
+Keep individual Quarter and Month information in the chart and summary table.
+
+==================================================
+5. BUSINESS FUNCTION FILTER
+==================================================
+
+Keep raw and mapped Business Function semantically separate.
+
+If filtering the original source field, label the filter:
+
+Business Function
+
+If filtering the standardized:
+
+IVS
+AVS
+CVE
+PT
+
+classification, label the filter:
+
+Mapped Business Function
+
+Do NOT call the standardized four-category field "Business Function" because
+that would make it unclear whether the user is filtering raw or processed data.
+
+==================================================
+6. DATA-AS-OF INFORMATION
+==================================================
+
+Continue displaying:
+
+Data as of <Report End Date>
+
+Example:
+
+Data as of 31 Aug 2026
+
+Do NOT hardcode the date.
+
+Retrieve it from processing-run metadata.
+
+Also display the relevant processed source filename where appropriate.
+
+==================================================
+7. REPORTING PERIOD / PROCESSING RUN
+==================================================
+
+The latest completed processing run should remain the default.
+
+However, design the page so historical reporting periods can later be selected.
+
+Conceptually:
+
+Reporting Period
+[ August 2026 ▼ ]
+
+When historical runs exist, users should eventually be able to switch between
+them without uploading the file again.
+
+Do not implement artificial historical periods if only one processing run
+currently exists.
+
+==================================================
+8. ACTIVE FILTER SUMMARY
+==================================================
+
+Add a compact active-filter summary.
+
+Example:
+
+Active Filters:
+
+ICS Hierarchy: Wealth and Retail Banking
+Within SLA?: No
+Remediation Status: Open, In Progress
+
+If no filters are active:
+
+All applicable records
+
+Allow individual active filters to be removed easily.
+
+Also retain:
+
+Reset Filters
+
+This is important so screenshots and exported reports clearly show what data
+the user is looking at.
+
+==================================================
+9. FILTER BEHAVIOR
+==================================================
+
+Filters should:
+
+- Support multiple selections where appropriate
+- Display "All" when nothing is selected
+- Display the selected value for one selection
+- Display "2 selected", etc. for multiple selections
+- Update the report without full page reload
+- Update KPIs
+- Update charts
+- Update distributions
+- Update summary tables
+- Update Grand Total
+
+Avoid triggering different calculations between the chart and table.
+
+All visualization components on the page must use the SAME filtered report
+population.
+
+==================================================
+10. FILTER OPTION COUNTS
+==================================================
+
+Where practical, display the available count next to filter values.
+
+Example:
+
+Remediation Status
+
+Open (125)
+In Progress (86)
+Closed (210)
+
+The count should reflect the appropriate current filter context.
+
+Do not implement this if it makes filter performance poor for large reporting
+runs.
+
+This is a usability enhancement, not a required business rule.
+
+==================================================
+11. ROW HIERARCHY
+==================================================
+
+Keep:
+
+Cluster
+    -> ICS Group Country
+
+Default:
+
+Cluster collapsed.
+
+Example:
+
+[+] North Asia
+[+] ASEAN
+[+] Africa
+
+Expanded:
+
+[-] North Asia
+      China
+      KOREA, REPUBLIC OF
+      Taiwan
+
+Keep:
+
+Expand Rows
+Collapse Rows
+
+If row configuration is available, allow only the approved options:
+
+Cluster -> ICS Group Country
+Cluster only
+ICS Group Country only
+
+Do not expose arbitrary database columns.
+
+==================================================
+12. REMEDIATION PLAN COLUMN HIERARCHY
+==================================================
+
+Keep:
+
+Quarter
+    -> Month
+
+Example:
+
+[+] 2026-Q4
+
+expanded:
+
+[-] 2026-Q4
+      Oct-2026
+      Nov-2026
+      Dec-2026
+      Quarter Total
+
+Unplanned must remain a standalone category.
+
+Do NOT create fake child months underneath Unplanned.
+
+Keep Quarter and Month chronologically sorted.
+
+==================================================
+13. CHART DESIGN
+==================================================
+
+Keep charts complementary to the table rather than duplicating everything.
+
+Vulnerability Prioritization:
+
+Stacked bar chart
+Cluster -> P1/P2/P3/P4
+
+Remediation Rate:
+
+Stacked bar chart
+Cluster -> Met SLA/Breached SLA/Exception/Open/Overdue
+
+Remediation Plan:
+
+Use a timeline/bar-style visualization showing Quarter-level planned
+vulnerabilities and Unplanned.
+
+Do not overcrowd charts with every Country by default.
+
+Cluster should be the default chart level.
+
+The table can provide the detailed Country hierarchy.
+
+==================================================
+14. CONSISTENT CATEGORY COLORS
+==================================================
+
+Use consistent category colours throughout the application.
+
+For example:
+
+P1 should always use the same colour wherever P1 appears.
+
+P2 should always use the same colour wherever P2 appears.
+
+Apply the same principle to:
+
+P3
+P4
+Met SLA
+Breached SLA
+Exception
+Open
+Overdue
+Unplanned
+
+Do not allow the same category to randomly change colour between charts.
+
+Use accessible contrast.
+
+==================================================
+15. TABLE/CHART INTERACTION
+==================================================
+
+Where practical, allow a chart segment to act as a filter/drill-down shortcut.
+
+Example:
+
+User selects:
+
+North Asia -> P2
+
+The application may open the same underlying-record drill-down as selecting the
+North Asia/P2 table cell.
+
+Do not create different definitions between chart clicks and table clicks.
+
+Both must use the same reporting filters.
+
+==================================================
+16. DRILL-DOWN
+==================================================
+
+Keep click-to-drill-down.
+
+Clicking a summary cell must open ONLY the records represented by that exact
+cell.
+
+Example:
+
+Current filters:
+ICS Hierarchy = Wealth and Retail Banking
+
+Clicked:
+North Asia -> P2
+
+Drill-down must inherit:
+
+- Current page filters
+- North Asia row condition
+- P2 column condition
+
+Do not show records outside the selected summary population.
+
+==================================================
+17. DRILL-DOWN FIELDS
+==================================================
+
+Ensure drill-down can show:
+
+Unique Reference ID
+CIID
+Cluster
+ICS Group Country
+Mapped Business Function
+Final Severity Rating
+IBS
+Prioty
+Within SLA?
+Remediation Status
+Met or Breached SLA
+Remediation Planned Date
+Planned Remediation Month
+Planned Remediation Quarter
+Data Quality Issues
+
+Raw Business Function may also be shown where useful so users can compare it
+with Mapped Business Function.
+
+==================================================
+18. DRILL-DOWN PAGINATION
+==================================================
+
+Keep server-side drill-down pagination.
+
+Do not retrieve thousands of underlying records at once.
+
+A page size such as 50 is acceptable for the current implementation.
+
+Provide:
+
+Previous
+Next
+Page X of Y
+
+where appropriate.
+
+==================================================
+19. DISTINCT COUNT
+==================================================
+
+This rule is critical.
+
+Every displayed vulnerability count is:
+
+DISTINCT COUNT of Unique Reference ID
+
+This includes:
+
+- KPI cards
+- chart segments
+- distribution counts
+- table cells
+- row subtotals
+- column subtotals
+- Quarter totals
+- Grand Total
+
+Calculate each total independently.
+
+Do NOT create Grand Total by simply adding displayed child cells.
+
+The same Unique Reference ID may occur in more than one child grouping.
+
+Records without a usable Unique Reference ID must not artificially increase
+the vulnerability count.
+
+==================================================
+20. DATA QUALITY VISIBILITY
+==================================================
+
+Add a small Data Quality indicator to the report header or near the report
+metadata.
+
+For example:
+
+Data Quality
+12 warnings
+
+Selecting it may show existing processing/validation warnings.
+
+Do NOT treat data-quality warnings as vulnerabilities.
+
+This is informational so a user can understand whether mappings, IDs or input
+values require review.
+
+Possible existing issues can include:
+
+Missing Unique Reference ID
+Duplicate Unique Reference ID
+Check Mapping
+Unmapped Business Function
+Invalid Date
+Check Input
+
+Only display issues that actually exist for the selected processing run.
+
+==================================================
+21. SOURCE VS CALCULATED FIELD CLARITY
+==================================================
+
+Where useful in drill-down/details, visually distinguish fields produced by
+the processing engine from original source fields.
+
+Examples of calculated/enriched fields include:
+
+Cluster
+IBS
+Mapped Business Function
+Within SLA?
+Prioty
+Planned Remediation Quarter
+Planned Remediation Month
+
+This does not need to clutter the main summary.
+
+The purpose is simply to help troubleshooting and validation.
+
+==================================================
+22. EMPTY STATES
+==================================================
+
+Handle no-result filters gracefully.
+
+If the selected filters produce zero vulnerability records, do NOT show a
+broken or misleading empty chart.
+
+Display something such as:
+
+"No vulnerabilities match the selected filters."
+
+Still show:
+
+Active Filters
+Reset Filters
+
+Do not present zero rows as an application error.
+
+==================================================
+23. LOADING STATES
+==================================================
+
+When summary data is being fetched:
+
+- Do not display stale numbers as though they belong to the new selection.
+- Show appropriate loading/skeleton states.
+- Prevent duplicate requests where practical.
+
+Do not block navigation unnecessarily.
+
+==================================================
+24. ERROR STATES
+==================================================
+
+If the reporting API fails, show a clear report error state.
+
+Do not expose backend stack traces in the UI.
+
+Provide a safe retry action where supported by the existing architecture.
+
+==================================================
+25. EXPORT CURRENT VIEW
+==================================================
+
+Design the reporting interface so the CURRENT filtered summary can eventually
+be exported.
+
+The exported summary should represent:
+
+- Current report type
+- Reporting period
+- Active filters
+- Rows
+- Columns
+- Distinct vulnerability counts
+
+Do not automatically export the entire underlying raw dataset when the user
+only requests a summary.
+
+If export functionality is not currently implemented, keep this as a planned
+enhancement rather than blocking the current report implementation.
+
+==================================================
+26. REPORT CONFIGURATION DISPLAY
+==================================================
+
+Keep the Report Setup information but make it compact.
+
+Show:
+
+Report View
+Rows
+Columns
+Metric
+
+Example:
+
+Report View:
+Vulnerability Prioritization
+
+Rows:
+Cluster -> ICS Group Country
+
+Columns:
+Prioty
+
+Metric:
+Number of Vulnerability
+(Distinct Unique Reference ID)
+
+Do not make users configure technical database concepts.
+
+==================================================
+27. PROCESSING-RUN TRACEABILITY
+==================================================
+
+Every displayed summary must be tied to one completed processing run.
+
+Metadata should make it possible to determine:
+
+- Reporting period
+- Processed filename
+- Processing run
+- Data-as-of date
+
+Do not combine records from different reporting runs unless a future
+cross-period report explicitly requests it.
+
+==================================================
+28. PERFORMANCE
+==================================================
+
+Current in-memory aggregation is acceptable for the synthetic prototype.
+
+However, do not make loading an entire large reporting run into application
+memory a permanent architectural requirement.
+
+Keep the reporting service modular so filtering/aggregation can later move to
+PostgreSQL or another approved scalable implementation.
+
+Do NOT send the complete reporting dataset to React for client-side
+PivotTable calculations.
+
+React should receive aggregated summary results.
+
+Drill-down records should be loaded separately and paginated.
+
+==================================================
+29. RESPONSIVE DESIGN
+==================================================
+
+Preserve the current desktop corporate-dashboard experience.
+
+For narrower screens:
+
+- KPI cards may wrap
+- Filters may stack
+- Tables may scroll horizontally
+
+Do NOT squash the Pivot-style summary table until column labels become
+unreadable.
+
+Desktop screenshots remain the main presentation target for the university
+project.
+
+==================================================
+30. SUMMARY VIEW PRINCIPLE
+==================================================
+
+The final interface should feel like a web-based improvement over the existing
+Excel reporting workflow, NOT an Excel PivotTable copied directly into a
+browser.
+
+Preserve:
+
+- Familiar Cluster/Country hierarchy
+- Familiar filters
+- Familiar reporting categories
+- Exact business calculations
+
+Improve:
+
+- Navigation
+- Filtering
+- Expand/collapse
+- Visualization
+- Drill-down
+- Data-quality visibility
+- Historical run selection
+- Readability
+- Traceability
+
+Do not add features that require new, unconfirmed business rules.
+
+Do not redesign currently working functionality unnecessarily.
