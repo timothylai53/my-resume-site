@@ -1,29 +1,130 @@
-No, the summary reports have no calculation problems. On your current data (run 7, 1,000 records) I recomputed every number in all three views with a separate pandas calculation:
+The summary calculation verification looks correct.
 
-┌────────────────────────┬──────────────────────────────────────────────────────────────┬────────────┬────────────┐
-│          View          │                        Filters tested                        │   Cells    │ Mismatches │
-│                        │                                                              │  checked   │            │
-├────────────────────────┼──────────────────────────────────────────────────────────────┼────────────┼────────────┤
-│ Vulnerability          │ none; blanks included; Status = Open + In Progress with      │ 936        │ 0          │
-│ Prioritization         │ Within SLA = No; one ICS Hierarchy value                     │            │            │
-├────────────────────────┼──────────────────────────────────────────────────────────────┼────────────┼────────────┤
-│ Remediation Rate       │ none; Business Function = IVS + CVE with Severity = Critical │ 540        │ 0          │
-│                        │  + High                                                      │            │            │
-├────────────────────────┼──────────────────────────────────────────────────────────────┼────────────┼────────────┤
-│ Remediation Plan       │ none; Prioty = P1 + P2                                       │ 1,288      │ 0          │
-└────────────────────────┴──────────────────────────────────────────────────────────────┴────────────┴────────────┘
+Please use the following decisions for the three outstanding reporting
+behaviors.
 
-The structure also matches your spec:
-- Rows: Cluster → ICS Group Country, with NA and Check Mapping listed last. Group now contains only "Group".
-- Remediation Rate columns: Met SLA, Breached SLA, Exception, Open, Overdue.
-- Remediation Plan columns: 2026-Q3 → Sep; 2026-Q4 → Oct, Nov, Dec; 2027-Q1 → Jan, Feb, Mar; 2027-Q2 → Apr; then Unplanned with no months.
 
-Three things to confirm (behaviour I chose, not mistakes)
+1. BLANK PRIOTY
 
-1. Vulnerability Prioritization shows 438 and hides 562 records whose Prioty is blank (severity not eligible). An Excel PivotTable would normally show a "(blank)" column unless it's filtered out. Should the default be hidden, as now, or shown?
-2. Remediation Plan counts every status by default, including Closed and Remediated records that still have a planned date. Does your Excel report count only open items (Open / In Progress / Overdue), or everything? Today you'd need the Remediation Status filter to narrow it.
-3. Remediation Rate uses Met or Breached SLA exactly as it appears in your file. That's fine if your source always supplies it; if Excel calculates it, I'll need the rule.
+For the Vulnerability Prioritization report:
 
-One limitation of the test data
+Hide records with blank Prioty from the normal P1/P2/P3/P4 summary by default.
 
-Your current file has no duplicate Unique Reference IDs, so on this data a distinct count equals a row count. The automated tests do cover duplicates (for example "A, A, B, C = 3", and a total being lower than the sum of its children), but your real data will be the first true test of that at scale.
+The standard Priority report should display:
+
+P1
+P2
+P3
+P4
+Grand Total
+
+Do not create "(blank)" as a normal Priority column by default.
+
+However, keep an optional:
+
+Include Blank Priority
+
+control for data-quality/troubleshooting purposes.
+
+Blank Priority is intentional for records that are not Priority-eligible,
+including cases such as Low severity and Medium severity where mapped Business
+Function is not PT.
+
+
+2. REMEDIATION PLAN STATUS
+
+Do NOT automatically exclude Closed or Remediated records.
+
+Remediation Status is already an explicit filter for the Remediation Plan
+report.
+
+Therefore:
+
+Remediation Status = All
+-> include all statuses
+
+If the user selects specific statuses:
+-> include only those statuses
+
+Do not introduce an implicit "open items only" business rule.
+
+If a specific default Remediation Status selection is confirmed from the
+existing Excel report later, we can configure that default separately.
+
+The aggregation logic itself should remain status-independent.
+
+
+3. MET OR BREACHED SLA
+
+For now:
+
+Met or Breached SLA
+
+is a SOURCE field.
+
+Do NOT calculate or derive it.
+
+Use its existing values for the Remediation Rate report:
+
+Met SLA
+Breached SLA
+Exception
+Open
+Overdue
+
+The calculation/business rule that produces Met or Breached SLA is not yet
+confirmed.
+
+Keep that derivation as a TODO rather than inventing a formula.
+
+
+4. DISTINCT COUNT
+
+Keep the existing reporting metric:
+
+Number of Vulnerability
+=
+DISTINCT COUNT of Unique Reference ID
+
+Every cell, subtotal and Grand Total must independently calculate the distinct
+count within its current filters/grouping.
+
+Do not calculate Grand Total by adding visible child cells.
+
+
+5. CURRENT SYNTHETIC DATA
+
+It is acceptable that the current 1,000-row synthetic dataset has no duplicate
+Unique Reference IDs.
+
+Keep the automated duplicate-ID aggregation tests because the reporting engine
+must still behave correctly when duplicates exist in future inputs.
+
+Do not alter the current dataset solely to force duplicate IDs into the
+reporting summaries.
+
+
+6. CURRENT SUMMARY STRUCTURE
+
+Keep:
+
+Vulnerability Prioritization:
+Rows = Cluster -> ICS Group Country
+Columns = Prioty
+Values = distinct Unique Reference ID
+
+Remediation Rate:
+Rows = Cluster -> ICS Group Country
+Columns = Met or Breached SLA
+Values = distinct Unique Reference ID
+
+Remediation Plan:
+Rows = Cluster -> ICS Group Country
+Columns = Planned Remediation Quarter -> Month
+Values = distinct Unique Reference ID
+
+Unplanned must remain separate and should not have child months.
+
+
+No change is required to the summary calculation engine based on the current
+verification results.
