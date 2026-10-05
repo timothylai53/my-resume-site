@@ -1,506 +1,111 @@
-Implement the following PivotTable-style summary requirements for my
-Vulnerability Management Reporting Automation System.
+Below is every question whose answer affects whether Raw Data makes sense. Each one shows what the file does now and the default I'd use, so you can reply with just the number and "OK" to accept it, or give your answer. The ones marked ⭐ cause most of the current problems.
 
-IMPORTANT:
-These reports must use the PROCESSED dataset after business-rule enrichment.
+A. Reporting period
 
-Do not reproduce Excel PivotTables literally. Build reusable backend
-aggregation and frontend filter/table components.
+1. Is the report month always one month (currently fixed at 1–31 Aug 2026)? Or should the file contain several months, e.g. Jun–Aug, for trend charts?
+   Default: keep August 2026 only.
 
-==================================================
-GENERAL RULES
-==================================================
+B. SLA
 
-METRIC:
+2. Is SLA Days fixed per severity? Currently Critical 30, High 60, Medium 90, Low 180.
+3. What are the real SLA Category values? Currently Standard / Extended (double the days) / No SLA.
+4. When does a finding have No SLA, for example an exception or a specific Source?
+5. Is SLA Start Date the date the finding was first detected?
+   Default: yes, SLA Due = SLA Start + SLA Days.
 
-"Number of Vulnerability" means:
+C. Remediation status ⭐
 
-DISTINCT COUNT of Unique Reference ID
+6. What are the real Remediation Status values? Currently Open, In Progress, Remediated, Closed, Risk Accepted, Exception Approved.
+7. What is the difference between Remediated and Closed? Do both need a Closed Date?
+8. Should every exception (Risk Accepted / Exception Approved) have an Exception ID, Category and Expiry Date? Currently yes.
+9. What are the real Exception Category valu, Compensating Control, Technical Limitation, Vendor Dependency.
 
-Do NOT use normal row count.
+D. Met or Breached SLA ⭐
 
-Example:
+10. Is this the rule?
+- Exception → Exception
+- Closed on or before the due date → Met SLA
+- Closed after the due date → Breached SLA
+- Still open and past the due date → Overdue
+- Still open and not yet due → Open
+11. If Report End Date equals SLA Due Date and the finding is still open, is it Overdue or Open? The backend's Within
+    SLA rule treats an equal date as "No".
 
-Unique Reference ID:
-A
-A
-B
-C
+E. Updated Remediation Status ⭐ (currently only Overdue / Exception)
 
-Number of Vulnerability = 3, NOT 4.
+12. What value do the rows that are neither overdue nor exceptions get: blank, "Open", "Closed", or keep the original
+    Remediation Status?
+13. Is it simply: exception → Exception, past due and open → Overdue, otherwise copy Remediation Status?
 
+F. New Findings? ⭐
 
-ROW HIERARCHY FOR ALL REPORTS:
+14. Is New Finding defined as SLA Start Datenside the report month, with everything elseBacklog?
+15. Roughly what share should be new versus backlog? Default: about 20% new.
 
-Cluster
-    -> ICS Group Country
+G. CJ or IF
 
-Example:
+16. What do CJ and IF mean, and what decidesAsset Environment, Platform or BusinessFunction, or a separate list like the IBS sheet?
+17. If nothing decides them, is a random split okay? Currently Others 41%, IF 26%, CJ 19%, IF-CJ 14%.
 
-North Asia
-    -> China
-    -> KOREA, REPUBLIC OF
-    -> Taiwan
+H. Remediation Domain and Grouping ⭐
 
-Allow expand/collapse:
+18. What are the real Remediation Domain val, Application, Database, Network, End UserComputing, Cloud.
+19. How is Remediation Domain Grouping (WRB / REGION ASIA / REGION AME) decided? By Remediation Domain, by Country/Cluster (e.g. ASEAN → REGION ASIN AME, Group → WRB), or by something else?
 
-[+] North Asia
+I. Business Function, Discovery Method and Source
 
-[-] North Asia
-      China
-      KOREA, REPUBLIC OF
-      Taiwan
+20. Is Business Function tied to how the finding was found? My guess:
+- AVS = application scan
+- IVS = infrastructure scan
+- PT = penetration test
+- CSR = code security review
+- SPM = ?
 
+   If so, Discovery Method, Source and Platform should match it instead of being independent. Currently they don't.
+21. What does SPM stand for, and why does it
+22. What are the real Discovery Method and Source values?
 
-==================================================
-REPORT 1
-VULNERABILITY PRIORITIZATION - CLUSTER
-(VULNERABILITY VIEW)
-==================================================
+J. IBS and priority
 
-FILTERS:
+23. Is a finding IBS purely because its CIID is on the IBS sheet? Is the current split okay? Currently 600 IBS / 400 non-IBS rows.
+24. Should the data deliberately cover every cell of the Prioty matrix (each IF/CJ/IBS condition × IVS/AVS/CVE/PT)? Default: yes, at least 10 rows per cell.
 
-1. Remediation Domain Grouping
-2. ICS Hierarchy
-3. Within SLA?
-4. Remediation Status
+K. Dates
 
-COLUMNS:
+25. Can a Remediation Planned Date be before the report month, so that "Plan Date Expired" appears? Currently all
+    planned dates are Sep-2026 to Apr-2027.
+26. Should closed findings still keep a planned date?
+27. Must the Closed Date fall between SLA St yes.
 
-Prioty
+L. Assets
 
-ROWS:
+28. Can a Decommissioned asset still have an Open or In Progress finding? Currently 32 rows do.
+29. What are the real values for Asset Status, Asset Capability, Asset Environment and Cmdb Review?
 
-Cluster
-    -> ICS Group Country
+M. Severity and CVSS
 
-VALUES:
+30. Is Final Severity Rating taken from the d bands (9+ Critical, 7–8.9 High, 4–6.9Medium, under 4 Low)? Currently yes.
+31. Should EPSS and Exploit Maturity be higher for Critical and High findings? Currently random.
 
-Distinct Count of Unique Reference ID
+N. "Last Month" and reopen columns
 
-Display the value as:
+32. Should the Last Month columns (Status, Domain, Severity, Planned Quarter) mostly equal this month's values, with a few changes? Currently about 90% the same.
+33. If a finding was Closed last month and is Open now, must Re Opened Closed Count be at least 1?
+34. Should Last Month Remediation Domain Groe rule as question 19? Currently blank.
 
-Number of Vulnerability
+O. Country
 
-Expected table structure:
+35. Is ;  the right separator for multi-country cells? Does the real data use something else, such as , or a line break?
+36. Must ICS Group Country always be one of ry? Currently it's the first one listed.
 
-Cluster / Country | P1 | P2 | P3 | P4 | Grand Total
+P. Columns with unknown meaning
 
+37. What do RTI, In Scope For Strike Rate, Scope and No of Vulnerabilities mean, and what values are allowed? Currently Yes/No, Yes/No, In Scope/Out of Scope, and 1–25.
+38. Should Product/OS and Platform use real product names, such as "Windows Server 2019"? Currently fictional names.
 
-==================================================
-REPORT 2
-WRB VULNERABILITY PRIORITIZATION - CLUSTER
-(VULNERABILITY VIEW)
-==================================================
+Q. Test errors and blank columns
 
-FILTERS:
+39. Should this file be fully clean, with dey, TEST-UNKNOWN, missing dates) kept in aseparate small error-test file? Currently it has 3 blank Country, 3 TEST-UNKNOWN, 20 missing SLA Due Date and 8 missing Planned Date rows.
+40. Should the remaining calculated columns stay blank for the backend to fill? These are Aging, Planned Remediation (Quarter/Month/Week), Closed By Year, Closed By Year-month, QTD, MTD and Due In Months.
 
-1. Remediation Domain Grouping
-2. ICS Hierarchy
-3. Within SLA?
-4. Remediation Status
-
-COLUMNS:
-
-Prioty
-
-ROWS:
-
-Cluster
-    -> ICS Group Country
-
-VALUES:
-
-Distinct Count of Unique Reference ID
-
-
-IMPORTANT:
-
-Report 1 and Report 2 use EXACTLY the same aggregation structure.
-
-The difference is only FILTER SELECTION.
-
-Therefore:
-
-DO NOT create two separate backend implementations.
-
-Create ONE reusable report:
-
-Vulnerability Prioritization
-
-For example, the user may select:
-
-ICS Hierarchy = All
-
-or:
-
-ICS Hierarchy = Wealth and Retail Banking
-
-The same report component should update based on the selected filters.
-
-
-==================================================
-REPORT 3
-WRB VULNERABILITY PRIORITIZATION - CLUSTER
-(REMEDIATION RATE)
-==================================================
-
-FILTERS:
-
-1. Remediation Domain Grouping
-2. ICS Hierarchy
-3. Business Function
-4. Within SLA?
-5. Remediation Status
-6. SLA Due Date
-7. Final Severity Rating
-
-COLUMNS:
-
-Met or Breached SLA
-
-Possible values include:
-
-Met SLA
-Breached SLA
-Exception
-Open
-Overdue
-
-ROWS:
-
-Cluster
-    -> ICS Group Country
-
-VALUES:
-
-Distinct Count of Unique Reference ID
-
-Display as:
-
-Number of Vulnerability
-
-Expected structure:
-
-Cluster / Country
-| Met SLA
-| Breached SLA
-| Exception
-| Open
-| Overdue
-| Grand Total
-
-
-==================================================
-REPORT 4
-WRB VULNERABILITY PRIORITIZATION - CLUSTER
-(REMEDIATION PLAN)
-==================================================
-
-FILTERS:
-
-1. Business Function
-2. Remediation Domain Grouping
-3. Remediation Status
-4. ICS Hierarchy
-5. Within SLA?
-6. Prioty
-
-COLUMN HIERARCHY:
-
-Planned Remediation (Quarter)
-    -> Planned Remediation (Month)
-
-ROWS:
-
-Cluster
-    -> ICS Group Country
-
-VALUES:
-
-Distinct Count of Unique Reference ID
-
-Display as:
-
-Number of Vulnerability
-
-
-==================================================
-REMEDIATION PLAN HIERARCHY
-==================================================
-
-The Remediation Plan should normally display QUARTER first.
-
-Example:
-
-[+] 2026-Q3
-[+] 2026-Q4
-[+] 2027-Q1
-[+] 2027-Q2
-
-The user can expand a quarter to see months.
-
-Example:
-
-[-] 2026-Q4
-      Oct-2026
-      Nov-2026
-      Dec-2026
-
-[-] 2027-Q1
-      Jan-2027
-      Feb-2027
-      Mar-2027
-
-Quarter derivation:
-
-Jan-Mar -> Q1
-Apr-Jun -> Q2
-Jul-Sep -> Q3
-Oct-Dec -> Q4
-
-Quarter display:
-
-YYYY-Q#
-
-Month display:
-
-MMM-YYYY
-
-Keep chronological sorting.
-
-
-==================================================
-UNPLANNED
-==================================================
-
-Confirmed rule:
-
-If:
-
-Remediation Planned Date is blank
-
-then:
-
-Remediation Plan = Unplanned
-
-Unplanned should appear as a separate category.
-
-Do NOT assign a fake Month or Quarter to an Unplanned vulnerability.
-
-
-==================================================
-IMPORTANT REPORT CONSOLIDATION
-==================================================
-
-There are four existing Excel PivotTable summaries, but the web application
-only needs THREE reusable report modes:
-
-1. Vulnerability Prioritization
-2. Remediation Rate
-3. Remediation Plan
-
-Report 1 and Report 2 are the SAME report type with different filter
-selections.
-
-Do not duplicate them.
-
-
-==================================================
-FRONTEND REPORT SELECTOR
-==================================================
-
-Create a report selector:
-
-Report View:
-
-[ Vulnerability Prioritization ▼ ]
-
-Options:
-
-- Vulnerability Prioritization
-- Remediation Rate
-- Remediation Plan
-
-
-When:
-
-Vulnerability Prioritization
-
-is selected, show these filters:
-
-- Remediation Domain Grouping
-- ICS Hierarchy
-- Within SLA?
-- Remediation Status
-
-Columns:
-
-Prioty
-
-
-When:
-
-Remediation Rate
-
-is selected, show:
-
-- Remediation Domain Grouping
-- ICS Hierarchy
-- Business Function
-- Within SLA?
-- Remediation Status
-- SLA Due Date
-- Final Severity Rating
-
-Columns:
-
-Met or Breached SLA
-
-
-When:
-
-Remediation Plan
-
-is selected, show:
-
-- Business Function
-- Remediation Domain Grouping
-- Remediation Status
-- ICS Hierarchy
-- Within SLA?
-- Prioty
-
-Columns:
-
-Planned Remediation (Quarter)
-    -> Planned Remediation (Month)
-
-
-==================================================
-FILTER BEHAVIOR
-==================================================
-
-Filters must be interactive.
-
-Allow:
-
-- All
-- Single selection
-- Multiple selections where appropriate
-- Reset filters
-
-Filter options should come from the processed data where appropriate.
-
-When filters change:
-
-- KPI values update
-- summary table updates
-- charts update
-- subtotals update
-- Grand Total updates
-
-Do NOT reload the whole React application.
-
-
-==================================================
-USER SELECTABLE ROWS
-==================================================
-
-The primary/default row hierarchy is:
-
-Cluster
-    -> ICS Group Country
-
-However, make the reporting component reusable so the user can choose the
-approved row dimensions used by these reports.
-
-Approved row dimensions:
-
-Cluster
-ICS Group Country
-
-Default:
-
-Cluster -> ICS Group Country
-
-Do NOT expose every database column as a row dimension.
-
-
-==================================================
-USER SELECTABLE FILTERS
-==================================================
-
-Across these reporting modes, support these approved filter dimensions where
-applicable:
-
-Remediation Domain Grouping
-ICS Hierarchy
-Business Function
-Within SLA?
-Remediation Status
-SLA Due Date
-Final Severity Rating
-Prioty
-
-Do not expose arbitrary database columns.
-
-
-==================================================
-BACKEND ARCHITECTURE
-==================================================
-
-Do NOT implement each report using completely separate duplicated code.
-
-Create a reusable summary/reporting service.
-
-Conceptually:
-
-generate_report(
-    report_type,
-    filters,
-    row_dimensions,
-    column_dimensions
-)
-
-All three report modes use this metric:
-
-DISTINCT COUNT of Unique Reference ID
-
-
-Processing:
-
-Processed Reporting Dataset
-        ↓
-Apply Filters
-        ↓
-Group by Row Dimensions
-        ↓
-Group by Column Dimensions
-        ↓
-Distinct Count Unique Reference ID
-        ↓
-Calculate Subtotals
-        ↓
-Calculate Grand Total
-        ↓
-Return structured JSON
-        ↓
-React Dashboard
-
-
-==================================================
-BUSINESS RULES VS REPORTING
-==================================================
-
-Keep the two systems separate.
-
-BUSINESS RULE PROCESSING handles:
-
-Within SLA
-IBS
-Cluster
-Business Function Mapping
-Prioty
-Planned Remediation Quarter
-Planned
+If you only have time for a few, answer 10, hose cover the four ⭐ problem areas and theCJ/IF question that drives priority.
