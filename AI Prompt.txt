@@ -1,115 +1,221 @@
-> can you tell me again all the business rule you applied right now?
+I reviewed the current business-rule summary.
 
-These are all the business rules the system applies right now, in the order it applies them.
+Most of it is correct, but make the following corrections before continuing.
 
-1. Validation (before processing)
 
-Problems are reported; records are never removed.
+1. CLUSTER — IMPORTANT CORRECTION
 
-Validation fails, so the file can't be processed, when:
-- the Raw Data sheet is missing;
-- row 1 doesn't contain the column headers;
-- a column name appears twice;
-- the sheet has no records;
-- any of these 13 required columns is missinry, CIID, Business Function, Final SeverityRating, Remediation Status, Remediation Domain, Remediation Domain Grouping, ICS Hierarchy, CJ or IF, SLA Due Date,
-  Report End Date, Remediation Planned Date.
+Cluster is NOT derived from Country.
 
-Warnings, where the records are kept but flagged:
-- a missing Unique Reference ID, or one that appears more than once;
-- a date value that can't be read as a date;
-- a blank Country, CIID, Business Function, ng, Remediation Status, Remediation Domain or Report End Date;
-- a blank SLA Due Date when SLA Category isn't "No SLA";
-- a Country that isn't in the cluster mappin
-- a Business Function that doesn't map;
-- a CJ or IF value other than IF-CJ, IF, CJ or Others;
-- more than one Report End Date in the file (one upload should be one reporting period).
+Cluster must be derived from:
 
-cepted text date formats: 2026-12-31, 31/12/2026 (day first), 31-Dec-2026 and 31 Dec 2026. Real Excel date cells always work.
+ICS Group Country
 
-2. Data cleaning
+using:
 
-None yet. The cleaning step exists, but it's empty until you send the rules, so every record is kept.
+Raw Data[ICS Group Country]
+-> Cluster Mapping[ICS Group Country]
+-> Cluster Mapping[Cluster]
 
-3. Processing rules (calculated for every record)
+Rules:
 
-Cluster (from the Country column)
-- More than one country in the cell (separat
-- One country → the cluster from your mapping sheet (35 countries; for example Australia → ASEAN)
-- Blank → NA
-- Not in the mapping → Unmapped, flagged
+Blank ICS Group Country
+-> "NA"
 
-IBS (from CIID)
-- CIID on the IBS sheet → IBS
-- Not on it → Non-IBS
-- Blank → blank
-- Matching trims surrounding spaces and is o
+Mapped ICS Group Country
+-> mapped Cluster
 
-Mapped Business Function
-- Contains "CSR" (case doesn't matter) → IVSAVS → AVS, IVS → IVS, PT → PT, SPM → CVE
-- Anything else → unmapped, flagged
+Nonblank ICS Group Country not found in mapping
+-> "Check Mapping"
 
-Within SLA?                                                                                                          Report End Date before SLA Due Date → Yes
+Do NOT use Country as a fallback.
 
-Prioty
-1. Required inputs: IBS, Business Function, CJ or IF and Final Severity Rating. If any is missing → blank, flagged.
-2. Eligible severity: Critical, High, or Medium when the Business Function maps to PT. Otherwise → blank.
-3. Rules, checked in this order (first match wins):
+Do NOT parse Country to derive Cluster.
 
-┌─────┬──────────────────┬─────┬─────┬─────┬─────┐
-│  #  │    Condition     │ IVS │ AVS │ CVE │ PT  │
-├─────┼──────────────────┼─────┼─────┼─────┼─────┤                                                                   1   │ IF-CJ            │ P1  │ P1  │ P1  │
-├─────┼──────────────────┼─────┼─────┼─────┼─────┤
-│ 2   │ IF + IBS         │ P1  │ P1  │ P1  │ P1  │
-├─────┼──────────────────┼─────┼─────┼─────┼─────┤                                                                   3–4 │ IF + Non-IBS     │ P2  │ P2  │ P1  │
-─┼──────────────────┼─────┼─────┼─────┼─────┤
-│ 5   │ CJ               │ P2  │ P2  │ P2  │ P2  │
-├─────┼──────────────────┼─────┼─────┼─────┼─────┤
-│ 6   │ Others + IBS     │ P2  │ P2  │ P2  │ P2  │
-├─────┼──────────────────┼─────┼─────┼─────┼─────┤
-│ 7–8 │ Others + Non-IBS │ P4  │ P4  │ P3  │ P3  │
-└─────┴──────────────────┴─────┴─────┴─────┴─────┘
+Therefore validation should check unmapped ICS Group Country values, not
+unmapped Country values.
 
-4. Eligible, but no rule matches (for example an unknown CJ or IF value, or an unmapped Business Function) → Check    Input, flagged.
 
-Remediation plan                                                                                                     Blank Remediation Planned Date → Unplanned
-- Quarter is the calendar quarter, written YYYY-Q#. Jan–Mar is Q1, Apr–Jun Q2, Jul–Sep Q3, Oct–Dec Q4.
-- Month is written MMM-YYYY.
-- Periods sort by date, with Unplanned last.
+2. REQUIRED COLUMNS
 
-Left blank on purpose: Group Apps, Risk Assesment Require and Planned Remediation (Week).
-                                                                                                                      Reporting rules
+For the currently confirmed processing/reporting rules, ensure the source
+structure contains the required fields including:
 
-- Number of Vulnerability = the distinct count of Unique Reference ID, used everywhere. Records without an ID aren't counted. Each cell and total is its own dibe lower than the sum of its parts.
-- Rows: Cluster → ICS Group Country (you can switch to Cluster only, or ICS Group Country only).
-- Three report views:
+Unique Reference ID
+CIID
+Business Function
+Final Severity Rating
+Remediation Status
+Remediation Domain
+Remediation Domain Grouping
+ICS Hierarchy
+ICS Group Country
+CJ or IF
+SLA Due Date
+Report End Date
+Remediation Planned Date
 
-┌──────────────────────┬─────────────────────────────────────────────────────────────┐
-──────────────┼─────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ Vulnerability        │ Prioty (P1–P4)                      │ Remediation Domain Grouping, ICS Hierarchy, Within │
-│ Prioritization       │                                     │  SLA?, Remediation Status                          │
-├──────────────────────┼─────────────────────────────────────┼────────────────────────────────────────────────────┤
-│                      │ Met or Breached SLA (Met SLA,       │ the above + Business Function, SLA Due Date (date  │
-│ Remediation Rate     │ Breached SLA, Exception, Open,      │ range), Final Severity Rating                      │
-│                      │ Overdue)                            │                                                    │
-├──────────────────────┼─────────────────────────────────────┼────────────────────────────────────────────────────┤
-│                      │                                     │ Business Function, Remediation Domain Grouping,    │
-│ Remediation Plan     │ Quarter → Month, thn Status, ICS Hierarchy, Within SLA?,    │
-│                      │                                     │ Prioty                                             │
-└──────────────────────┴─────────────────────────────────────┴────────────────────────────────────────────────────┘
-                                                                                                                   - Filters allow several values at once. Empt
- Function filter offers only IVS, AVS, PT, CVE (the mapped values).
-- The Prioritization view hides records with a blank Prioty by default; a tick-box includes them.
-- Market tabs (PT / CVE / IVS / AVS): records are selected by Mapped Business Function and shown as Cluster → ICS Group Country, by Remediation Status, plus a Quarter → Month plan.
+A required column means the COLUMN must exist.
 
-5. Values taken directly from your file (not calculated)
+It does NOT necessarily mean every record must contain a nonblank value.
 
-Met or Breached SLA, Updated Remediation Status, New Findings?, Remediation Domain Grouping, ICS Hierarchy and ICS Group Country.
+For example:
 
-Waiting for your rules
+blank Remediation Planned Date
+-> valid business state
+-> Unplanned
 
-- data cleaning;
-- Group Apps;
-- Risk Assesment Require;
-- Planned Remediation (Week);
-- Remediated and Remediation Rate on the mar
-- the other calculated template columns (Aging, Closed By Year, QTD, MTD, Average Time To Remediate, Due In Months).
+Do not reject the record just because Remediation Planned Date is blank.
+
+
+3. CLUSTER VALIDATION
+
+Replace any validation rule saying:
+
+"Country not in cluster mapping"
+
+with:
+
+"ICS Group Country not in Cluster Mapping"
+
+Country is not the Cluster lookup field.
+
+
+4. WITHIN SLA
+
+Ensure the COMPLETE rule is implemented:
+
+Blank SLA Due Date
+-> "No SLA"
+
+Blank Report End Date
+-> "No Report End Date"
+
+Invalid date
+-> "Invalid Date"
+
+Report End Date < SLA Due Date
+-> "Yes"
+
+Report End Date >= SLA Due Date
+-> "No"
+
+Therefore equality produces:
+
+"No"
+
+
+5. IBS
+
+Current rule is confirmed:
+
+blank CIID -> blank
+CIID found in IBS reference -> IBS
+CIID not found -> Non-IBS
+
+
+6. BUSINESS FUNCTION MAPPING
+
+Current rule is confirmed:
+
+contains CSR -> IVS
+AVS -> AVS
+IVS -> IVS
+PT -> PT
+SPM -> CVE
+
+CSR matching is case-insensitive CONTAINS matching.
+
+
+7. PRIOTY
+
+The current Priority matrix and top-to-bottom rule precedence are confirmed.
+
+Keep the severity eligibility rule:
+
+Critical -> eligible
+High -> eligible
+Medium + mapped PT -> eligible
+Medium + IVS/AVS/CVE -> blank
+Low -> blank
+
+Required input missing -> blank.
+
+Required input present but invalid/unmapped for an otherwise eligible record
+-> Check Input.
+
+
+8. REMEDIATION PLAN
+
+Confirmed:
+
+Blank Remediation Planned Date
+-> Unplanned
+
+Valid planned date:
+-> derive calendar Quarter
+-> derive Month
+
+Reporting hierarchy:
+
+Quarter
+    -> Month
+
+Quarter is shown first and can expand to Month.
+
+Keep chronological ordering.
+
+
+9. REPORTING COUNT
+
+Number of Vulnerability means:
+
+DISTINCT COUNT of Unique Reference ID
+
+For every subtotal and Grand Total, independently calculate the distinct count
+after filters/grouping.
+
+Do NOT create Grand Total by simply adding displayed child counts because the
+same Unique Reference ID might occur in more than one child category.
+
+
+10. UNCONFIRMED RULES
+
+Do NOT currently calculate:
+
+Group Apps
+Risk Assesment Require
+Planned Remediation (Week)
+Plan Date Expired
+Average Time To Remediate
+Aging calculations
+QTD
+MTD
+Due In Months
+Closed By Year/month
+
+Keep them blank/TODO until rules are provided.
+
+
+11. MARKETS REPORT
+
+Mapped Business Function may be used to identify:
+
+PT
+CVE
+IVS
+AVS
+
+However, do not invent calculations for:
+
+Remediated
+Remediation Rate
+Planned within Target
+Plan Date Expired
+Residual
+
+until I provide those business rules.
+
+
+After applying these corrections, update the business-rule documentation and
+automated tests so the implementation and documentation remain consistent.
