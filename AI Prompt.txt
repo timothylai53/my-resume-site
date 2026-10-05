@@ -1,130 +1,97 @@
-The summary calculation verification looks correct.
+Here's how a summary is produced, from the moment you open a report to the numbers on the screen.
 
-Please use the following decisions for the three outstanding reporting
-behaviors.
+1. The data it starts from
 
+The summaries never read your Excel file. When you click Process, each record is enriched once with the rule outputs (Cluster, IBS, Mapped Business Function, Within SLA?, Prioty, Quarter, Month) and stored in PostgreSQL as one processing run.
 
-1. BLANK PRIOTY
+A report always uses the latest completed run. That run is loaded into memory once, so changing a filter doesn't read the database again.
 
-For the Vulnerability Prioritization report:
+2. What happens when you open a view or change a filter
 
-Hide records with blank Prioty from the normal P1/P2/P3/P4 summary by default.
+The page asks the backend for one report, for example:
+GET /api/reports/remediation_rate?remediation_status=Open&remediation_status=In Progress
+The backend then works through these steps (backend/app/reporting/service.py):
 
-The standard Priority report should display:
+Step 1 — Filter. It keeps only the records that match every selected filter.
+- Selecting several values in one filter means "any of these".
+- Different filters must all match.
+- An empty filter means All.
+- The SLA Due Date filter keeps dates between From and To, inclusive.
+- On Vulnerability Prioritization only: records with a blank Prioty are set aside unless Include Blank Priority is ticked, and the number set aside is reported.
 
-P1
-P2
-P3
-P4
-Grand Total
+Step 2 — Group into rows. Each remaining record is placed under its Cluster, and within it under its ICS Group Country. A blank value becomes its own row, labelled "NA" or "(blank)".
 
-Do not create "(blank)" as a normal Priority column by default.
+Step 3 — Group into columns. The column depends on the view:
+- Vulnerability Prioritization: Prioty (P1–P4)
+- Remediation Rate: Met or Breached SLA
+- Remediation Plan: Quarter, and also Month underneath. Unplanned records get a quarter column only, with no month.
 
-However, keep an optional:
+Step 4 — Count. Every number is a distinct count of Unique Reference ID, and each one is calculated separately from the records behind it:
+- cell (e.g. ASEAN × Open): distinct IDs that are ASEAN and Open
+- row total (e.g. ASEAN): distinct IDs in ASEAN, in any column
+- **column total
+Interrupted · What should Claude do instead?
 
-Include Blank Priority
+> can you tell me how you do the summary ? i mean what user see right now
 
-control for data-quality/troubleshooting purposes.
+Here's what you see on the Vulnerability Summary pages and how to use them.
 
-Blank Priority is intentional for records that are not Priority-eligible,
-including cases such as Low severity and Medium severity where mapped Business
-Function is not PT.
+Getting there
 
+The sidebar's Vulnerability Summary section has three links, one per report:
+- Vulnerability Prioritization (the default page)
+- Remediation Rate
+- Remediation Plan
 
-2. REMEDIATION PLAN STATUS
+You can also switch between them with the Report View dropdown at the top of the page.
 
-Do NOT automatically exclude Closed or Remediated records.
+What's on the page, top to bottom
 
-Remediation Status is already an explicit filter for the Remediation Plan
-report.
+1. Header. The report name, plus "Data as of 31 Aug 2026" and the file name of the processed dataset.
 
-Therefore:
+2. Report setup card
+- Report View: which of the three reports you're looking at.
+- Rows: Cluster → ICS Group Country (the default), Cluster only, or ICS Group Country only.
+- Columns: shows what the columns are, for example Prioty.
+- Metric: "Number of Vulnerability (distinct Unique Reference ID)".
 
-Remediation Status = All
--> include all statuses
+3. Filters card. Each report shows only its own filters:
 
-If the user selects specific statuses:
--> include only those statuses
+┌─────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────┐
+│         Report          │                                        Filters                                        │
+├─────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+│ Vulnerability           │ Remediation Domain Grouping, ICS Hierarchy, Within SLA?, Remediation Status, and the  │
+│ Prioritization          │ Include Blank Priority tick-box                                                       │
+├─────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+│ Remediation Rate        │ the same four, plus Business Function (IVS / AVS / PT / CVE), SLA Due Date (from–to   │
+│                         │ dates) and Final Severity Rating                                                      │
+├─────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+│ Remediation Plan        │ Business Function, Remediation Domain Grouping, Remediation Status, ICS Hierarchy,    │
+│                         │ Within SLA?, Prioty                                                                   │
+└─────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────┘
 
-Do not introduce an implicit "open items only" business rule.
+- Click a filter to tick one or more values. It then shows "All", the one value you picked, or "2 selected".
+- Reset filters clears them all.
+- Everything below updates straight away, without reloading the page.
 
-If a specific default Remediation Status selection is confirmed from the
-existing Excel report later, we can configure that default separately.
+4. KPI cards. One card for the total Number of Vulnerability, then one card per column with its share of the total:
+- Prioritization: P1, P2, P3, P4. The total card says "Excludes 562 without Prioty".
+- Remediation Rate: Met SLA, Breached SLA, Exception, Open, Overdue.
+- Remediation Plan: each quarter and Unplanned.
 
-The aggregation logic itself should remain status-independent.
+5. Chart and Distribution.
+- Left: a stacked bar for each cluster, split by the report's columns, with a legend.
+- Right: each column's count and percentage of the total.
 
+6. The summary table. This is the PivotTable equivalent.
+- Rows: clusters, collapsed at first. Click ▸ next to a cluster, or Expand rows, to see its ICS Group Countries. NA and Check Mapping are listed last.
+- Columns: P1–P4, the SLA outcomes, or the quarters.
+- On Remediation Plan: click ▸ on a quarter, or Expand months, to show its months followed by a "Quarter Total" column. Unplanned has no months.
+- Grand Total is the last column and the bottom row.
 
-3. MET OR BREACHED SLA
+7. Click any number to see its records. A panel opens from the right listing those vulnerabilities: ID, cluster, ICS Group Country, CIID, IBS, severity, priority, Within SLA?, status, Met or Breached SLA, planned month and any data-quality issues. The panel shows 50 records per page, and Esc closes it.
 
-For now:
+Things you might notice
 
-Met or Breached SLA
-
-is a SOURCE field.
-
-Do NOT calculate or derive it.
-
-Use its existing values for the Remediation Rate report:
-
-Met SLA
-Breached SLA
-Exception
-Open
-Overdue
-
-The calculation/business rule that produces Met or Breached SLA is not yet
-confirmed.
-
-Keep that derivation as a TODO rather than inventing a formula.
-
-
-4. DISTINCT COUNT
-
-Keep the existing reporting metric:
-
-Number of Vulnerability
-=
-DISTINCT COUNT of Unique Reference ID
-
-Every cell, subtotal and Grand Total must independently calculate the distinct
-count within its current filters/grouping.
-
-Do not calculate Grand Total by adding visible child cells.
-
-
-5. CURRENT SYNTHETIC DATA
-
-It is acceptable that the current 1,000-row synthetic dataset has no duplicate
-Unique Reference IDs.
-
-Keep the automated duplicate-ID aggregation tests because the reporting engine
-must still behave correctly when duplicates exist in future inputs.
-
-Do not alter the current dataset solely to force duplicate IDs into the
-reporting summaries.
-
-
-6. CURRENT SUMMARY STRUCTURE
-
-Keep:
-
-Vulnerability Prioritization:
-Rows = Cluster -> ICS Group Country
-Columns = Prioty
-Values = distinct Unique Reference ID
-
-Remediation Rate:
-Rows = Cluster -> ICS Group Country
-Columns = Met or Breached SLA
-Values = distinct Unique Reference ID
-
-Remediation Plan:
-Rows = Cluster -> ICS Group Country
-Columns = Planned Remediation Quarter -> Month
-Values = distinct Unique Reference ID
-
-Unplanned must remain separate and should not have child months.
-
-
-No change is required to the summary calculation engine based on the current
-verification results.
+- Prioritization shows 438, while the other two views show 1,000. That's because records with a blank Prioty are hidden by default. Tick Include Blank Priority to add them back as a "(blank)" column.
+- Every number is a distinct count of IDs. When an ID appears in more than one country or category, a total can be lower than its parts added together. The table's subtitle says so.
