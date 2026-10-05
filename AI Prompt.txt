@@ -1,573 +1,115 @@
-Thanks. Please use the following confirmations for the synthetic development
-dataset and application.
+> can you tell me again all the business rule you applied right now?
+
+These are all the business rules the system applies right now, in the order it applies them.
+
+1. Validation (before processing)
+
+Problems are reported; records are never removed.
+
+Validation fails, so the file can't be processed, when:
+- the Raw Data sheet is missing;
+- row 1 doesn't contain the column headers;
+- a column name appears twice;
+- the sheet has no records;
+- any of these 13 required columns is missinry, CIID, Business Function, Final SeverityRating, Remediation Status, Remediation Domain, Remediation Domain Grouping, ICS Hierarchy, CJ or IF, SLA Due Date,
+  Report End Date, Remediation Planned Date.
+
+Warnings, where the records are kept but flagged:
+- a missing Unique Reference ID, or one that appears more than once;
+- a date value that can't be read as a date;
+- a blank Country, CIID, Business Function, ng, Remediation Status, Remediation Domain or Report End Date;
+- a blank SLA Due Date when SLA Category isn't "No SLA";
+- a Country that isn't in the cluster mappin
+- a Business Function that doesn't map;
+- a CJ or IF value other than IF-CJ, IF, CJ or Others;
+- more than one Report End Date in the file (one upload should be one reporting period).
+
+cepted text date formats: 2026-12-31, 31/12/2026 (day first), 31-Dec-2026 and 31 Dec 2026. Real Excel date cells always work.
+
+2. Data cleaning
+
+None yet. The cleaning step exists, but it's empty until you send the rules, so every record is kept.
+
+3. Processing rules (calculated for every record)
+
+Cluster (from the Country column)
+- More than one country in the cell (separat
+- One country → the cluster from your mapping sheet (35 countries; for example Australia → ASEAN)
+- Blank → NA
+- Not in the mapping → Unmapped, flagged
+
+IBS (from CIID)
+- CIID on the IBS sheet → IBS
+- Not on it → Non-IBS
+- Blank → blank
+- Matching trims surrounding spaces and is o
+
+Mapped Business Function
+- Contains "CSR" (case doesn't matter) → IVSAVS → AVS, IVS → IVS, PT → PT, SPM → CVE
+- Anything else → unmapped, flagged
+
+Within SLA?                                                                                                          Report End Date before SLA Due Date → Yes
+
+Prioty
+1. Required inputs: IBS, Business Function, CJ or IF and Final Severity Rating. If any is missing → blank, flagged.
+2. Eligible severity: Critical, High, or Medium when the Business Function maps to PT. Otherwise → blank.
+3. Rules, checked in this order (first match wins):
+
+┌─────┬──────────────────┬─────┬─────┬─────┬─────┐
+│  #  │    Condition     │ IVS │ AVS │ CVE │ PT  │
+├─────┼──────────────────┼─────┼─────┼─────┼─────┤                                                                   1   │ IF-CJ            │ P1  │ P1  │ P1  │
+├─────┼──────────────────┼─────┼─────┼─────┼─────┤
+│ 2   │ IF + IBS         │ P1  │ P1  │ P1  │ P1  │
+├─────┼──────────────────┼─────┼─────┼─────┼─────┤                                                                   3–4 │ IF + Non-IBS     │ P2  │ P2  │ P1  │
+─┼──────────────────┼─────┼─────┼─────┼─────┤
+│ 5   │ CJ               │ P2  │ P2  │ P2  │ P2  │
+├─────┼──────────────────┼─────┼─────┼─────┼─────┤
+│ 6   │ Others + IBS     │ P2  │ P2  │ P2  │ P2  │
+├─────┼──────────────────┼─────┼─────┼─────┼─────┤
+│ 7–8 │ Others + Non-IBS │ P4  │ P4  │ P3  │ P3  │
+└─────┴──────────────────┴─────┴─────┴─────┴─────┘
+
+4. Eligible, but no rule matches (for example an unknown CJ or IF value, or an unmapped Business Function) → Check    Input, flagged.
+
+Remediation plan                                                                                                     Blank Remediation Planned Date → Unplanned
+- Quarter is the calendar quarter, written YYYY-Q#. Jan–Mar is Q1, Apr–Jun Q2, Jul–Sep Q3, Oct–Dec Q4.
+- Month is written MMM-YYYY.
+- Periods sort by date, with Unplanned last.
+
+Left blank on purpose: Group Apps, Risk Assesment Require and Planned Remediation (Week).
+                                                                                                                      Reporting rules
+
+- Number of Vulnerability = the distinct count of Unique Reference ID, used everywhere. Records without an ID aren't counted. Each cell and total is its own dibe lower than the sum of its parts.
+- Rows: Cluster → ICS Group Country (you can switch to Cluster only, or ICS Group Country only).
+- Three report views:
+
+┌──────────────────────┬─────────────────────────────────────────────────────────────┐
+──────────────┼─────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ Vulnerability        │ Prioty (P1–P4)                      │ Remediation Domain Grouping, ICS Hierarchy, Within │
+│ Prioritization       │                                     │  SLA?, Remediation Status                          │
+├──────────────────────┼─────────────────────────────────────┼────────────────────────────────────────────────────┤
+│                      │ Met or Breached SLA (Met SLA,       │ the above + Business Function, SLA Due Date (date  │
+│ Remediation Rate     │ Breached SLA, Exception, Open,      │ range), Final Severity Rating                      │
+│                      │ Overdue)                            │                                                    │
+├──────────────────────┼─────────────────────────────────────┼────────────────────────────────────────────────────┤
+│                      │                                     │ Business Function, Remediation Domain Grouping,    │
+│ Remediation Plan     │ Quarter → Month, thn Status, ICS Hierarchy, Within SLA?,    │
+│                      │                                     │ Prioty                                             │
+└──────────────────────┴─────────────────────────────────────┴────────────────────────────────────────────────────┘
+                                                                                                                   - Filters allow several values at once. Empt
+ Function filter offers only IVS, AVS, PT, CVE (the mapped values).
+- The Prioritization view hides records with a blank Prioty by default; a tick-box includes them.
+- Market tabs (PT / CVE / IVS / AVS): records are selected by Mapped Business Function and shown as Cluster → ICS Group Country, by Remediation Status, plus a Quarter → Month plan.
 
-Do not invent business rules for anything marked UNCONFIRMED.
+5. Values taken directly from your file (not calculated)
 
-==================================================
-A. REPORTING PERIOD
-==================================================
+Met or Breached SLA, Updated Remediation Status, New Findings?, Remediation Domain Grouping, ICS Hierarchy and ICS Group Country.
 
-1. CONFIRMED
+Waiting for your rules
 
-Keep this synthetic dataset as one reporting period only:
-
-Report Start Date = 1-Aug-2026
-Report End Date   = 31-Aug-2026
-
-All 1,000 rows belong to the August 2026 reporting period.
-
-Historical/trend reporting can be added later using separate reporting runs.
-
-==================================================
-B. SLA
-==================================================
-
-2. UNCONFIRMED
-
-Do not assume SLA Days are determined by Final Severity Rating.
-
-Keep the existing synthetic SLA Days values for test purposes only unless a
-confirmed business rule is provided later.
-
-
-3. UNCONFIRMED
-
-Do not treat Standard / Extended / No SLA as confirmed real SLA Category
-values.
-
-They may remain synthetic test values only.
-
-
-4. UNCONFIRMED
-
-The exact business reason for "No SLA" has not been confirmed.
-
-Do not derive No SLA from Exceptions, Source, Severity, or any other field.
-
-
-5. UNCONFIRMED
-
-Do NOT assume SLA Start Date = Last Detected / First Detected.
-
-Treat SLA Start Date and SLA Due Date as source fields.
-
-The application should not calculate SLA Due Date from SLA Days unless a
-confirmed rule is provided later.
-
-
-CONFIRMED Within SLA calculation:
-
-If SLA Due Date is blank:
-    Within SLA? = "No SLA"
-
-Else if Report End Date is blank:
-    Within SLA? = "No Report End Date"
-
-Else if Report End Date < SLA Due Date:
-    Within SLA? = "Yes"
-
-Else:
-    Within SLA? = "No"
-
-Therefore:
-
-Report End Date = SLA Due Date
--> Within SLA? = "No"
-
-Invalid date:
--> "Invalid Date"
-
-==================================================
-C. REMEDIATION STATUS
-==================================================
-
-6-9. UNCONFIRMED
-
-Do not invent relationships between:
-
-Remediation Status
-Remediation Closed Date
-Exception ID
-Exception Category
-Exception Expiry Date
-
-For now, Remediation Status is SOURCE DATA.
-
-Keep suitable synthetic values for testing, but do not treat the synthetic
-relationships as confirmed business rules.
-
-Do not enforce rules such as:
-"Closed must have Closed Date"
-or:
-"Exception must have Exception ID"
-
-until confirmed.
-
-==================================================
-D. MET OR BREACHED SLA
-==================================================
-
-10-11. IMPORTANT:
-
-Met or Breached SLA currently exists as SOURCE DATA in the synthetic Raw Data.
-
-Do NOT derive or recalculate this field yet.
-
-The values are:
-
-Met SLA
-Breached SLA
-Exception
-Open
-Overdue
-
-These values are required for the Remediation Rate Pivot-style report.
-
-Do not infer a business calculation from Remediation Status, Closed Date,
-SLA Due Date, or Report End Date yet.
-
-Within SLA? and Met or Breached SLA are separate fields/rules.
-
-Only the Within SLA? calculation is currently confirmed.
-
-==================================================
-E. UPDATED REMEDIATION STATUS
-==================================================
-
-12-13. UNCONFIRMED
-
-Treat Updated Remediation Status as SOURCE/TEST DATA for now.
-
-Current synthetic values may include:
-
-Overdue
-Exception
-
-Do not derive it from Remediation Status.
-
-Do not assume:
-Exception -> Exception
-Overdue -> Overdue
-otherwise copy Remediation Status
-
-until a confirmed rule is provided.
-
-
-==================================================
-F. NEW FINDINGS?
-==================================================
-
-14-15. UNCONFIRMED
-
-Treat New Findings? as SOURCE/TEST DATA for now.
-
-Allowed synthetic values currently are:
-
-New Finding
-Backlog
-
-Do not calculate New Finding using SLA Start Date or reporting dates.
-
-The current synthetic distribution is only for development/testing.
-
-==================================================
-G. CJ OR IF
-==================================================
-
-16. The business derivation of CJ or IF is NOT confirmed.
-
-For now treat:
-
-CJ or IF
-
-as a SOURCE/TEST field.
-
-Allowed values:
-
-CJ
-IF
-IF-CJ
-Others
-
-
-17. For the synthetic dataset, a random distribution is acceptable.
-
-However, ensure there are enough records in each category to test the Priority
-rules.
-
-Do not implement a CJ/IF derivation rule yet.
-
-==================================================
-H. REMEDIATION DOMAIN AND GROUPING
-==================================================
-
-18. UNCONFIRMED
-
-Do not treat Application / Database / Network / End User Computing / Cloud as
-confirmed real Remediation Domain categories.
-
-They may remain generic synthetic test values for now.
-
-
-19. IMPORTANT:
-
-Remediation Domain Grouping is currently a SOURCE/TEST field in the synthetic
-dataset.
-
-Allowed values:
-
-WRB
-REGION ASIA
-REGION AME
-
-Do NOT derive it from:
-
-Country
-Cluster
-Remediation Domain
-
-until a business rule is confirmed.
-
-All three values should be represented in the synthetic dataset.
-
-==================================================
-I. BUSINESS FUNCTION, DISCOVERY METHOD AND SOURCE
-==================================================
-
-20. Do NOT infer Business Function from Discovery Method, Source, or Platform.
-
-Business Function is its own source field.
-
-Confirmed Business Function mapping:
-
-Contains "CSR" -> IVS
-AVS -> AVS
-IVS -> IVS
-PT -> PT
-SPM -> CVE
-
-The "contains CSR" match is case-insensitive.
-
-
-21. The full meaning of SPM is not required for the current implementation.
-
-The only confirmed processing rule needed is:
-
-SPM -> CVE
-
-Do not invent an expanded meaning for SPM.
-
-
-22. Real Discovery Method and Source categories are UNCONFIRMED.
-
-Keep generic synthetic values for development only.
-
-Do not use Discovery Method or Source in business calculations unless a rule
-is provided later.
-
-==================================================
-J. IBS AND PRIORITY
-==================================================
-
-23. CONFIRMED
-
-IBS is determined ONLY by CIID membership in the separate IBS reference
-dataset.
-
-Rule:
-
-Blank CIID:
-    IBS = blank
-
-CIID exists in IBS reference file:
-    IBS = "IBS"
-
-CIID does not exist:
-    IBS = "Non-IBS"
-
-The current 600/400 synthetic distribution may be used for testing, but it is
-not intended to represent a real organizational percentage.
-
-
-24. YES.
-
-The synthetic dataset should deliberately cover the confirmed Prioty matrix.
-
-Ensure enough test records exist for combinations involving:
-
-CJ or IF:
-- IF-CJ
-- IF
-- CJ
-- Others
-
-IBS:
-- IBS
-- Non-IBS
-
-Mapped Business Function:
-- IVS
-- AVS
-- CVE
-- PT
-
-Final Severity Rating:
-- Critical
-- High
-- Medium
-- Low
-
-Especially ensure the dataset contains enough records to exercise each
-confirmed Priority rule.
-
-Do not attempt to force impossible/noneligible combinations to produce a
-Priority.
-
-Remember:
-
-Medium is Priority-eligible only when mapped Business Function = PT.
-
-Low is not Priority-eligible.
-
-==================================================
-K. REMEDIATION DATES
-==================================================
-
-25. Plan Date Expired calculation is still UNCONFIRMED.
-
-Do NOT generate or calculate Plan Date Expired based on assumptions.
-
-Remediation Planned Date may remain distributed across the existing synthetic
-future dates for now.
-
-
-26. UNCONFIRMED
-
-Do not enforce a rule about whether closed findings must or must not retain
-Remediation Planned Date.
-
-
-27. UNCONFIRMED
-
-Do not enforce additional Closed Date relationship rules yet.
-
-
-CONFIRMED Remediation Plan behavior:
-
-If Remediation Planned Date is blank:
-    Remediation Plan = Unplanned
-
-For valid plan dates:
-
-Parent grouping:
-    Planned Remediation (Quarter)
-
-Expandable child:
-    Planned Remediation (Month)
-
-Calendar quarters:
-
-Jan-Mar -> Q1
-Apr-Jun -> Q2
-Jul-Sep -> Q3
-Oct-Dec -> Q4
-
-Quarter display:
-YYYY-Q#
-
-Month display:
-MMM-YYYY
-
-
-==================================================
-L. ASSETS
-==================================================
-
-28-29. UNCONFIRMED
-
-Do not enforce relationships between Asset Status and Remediation Status.
-
-Asset values may remain generic synthetic test data.
-
-Do not treat the current synthetic categories as confirmed organizational
-values.
-
-==================================================
-M. SEVERITY AND CVSS
-==================================================
-
-30. UNCONFIRMED
-
-Do not calculate Final Severity Rating from CVSS yet.
-
-Treat Final Severity Rating as a source field.
-
-Do not assume the standard CVSS bands are the organization's confirmed
-Final Severity Rating business rule.
-
-
-31. UNCONFIRMED
-
-Do not artificially correlate EPSS or Exploit Maturity with Final Severity
-Rating.
-
-Synthetic random values are acceptable for testing.
-
-==================================================
-N. LAST MONTH / REOPEN
-==================================================
-
-32-34. UNCONFIRMED
-
-These fields are not required for the current dashboard/business-rule
-implementation.
-
-Keep suitable synthetic values or blanks, but do not enforce relationships.
-
-Do not derive reopening logic yet.
-
-==================================================
-O. COUNTRY
-==================================================
-
-35. UNCONFIRMED
-
-Do not build processing logic around the separator used by the Country field.
-
-The current synthetic format is test data only.
-
-
-36. Do NOT use Country to determine Cluster.
-
-This is important.
-
-Cluster must be determined from:
-
-ICS Group Country
-
-using:
-
-Cluster Mapping[ICS Group Country]
--> Cluster Mapping[Cluster]
-
-Rules:
-
-Blank ICS Group Country:
-    Cluster = "NA"
-
-Mapped:
-    Cluster = mapped value
-
-Unmapped:
-    Cluster = "Check Mapping"
-
-Do NOT use Country as a fallback.
-
-Synthetic unmapped tests should therefore be placed in ICS Group Country,
-not only Country.
-
-==================================================
-P. UNKNOWN COLUMNS
-==================================================
-
-37. UNCONFIRMED
-
-Do not build business logic around:
-
-RTI
-In Scope For Strike Rate
-Scope
-No of Vulnerabilities
-
-Use generic synthetic test values or blanks where appropriate.
-
-IMPORTANT:
-
-Dashboard "Number of Vulnerability" does NOT depend on the
-No of Vulnerabilities source column.
-
-For reporting:
-
-Number of Vulnerability
-=
-DISTINCT COUNT of Unique Reference ID
-
-
-38. Keep Product/OS and Platform fictional/synthetic.
-
-Do NOT use real organizational asset/product data.
-
-Generic test values are preferred.
-
-==================================================
-Q. TEST ERRORS AND CALCULATED COLUMNS
-==================================================
-
-39. Keep the main synthetic dataset useful for both development and controlled
-validation testing.
-
-A small number of intentional errors may remain, such as:
-
-- blank Unique Reference ID
-- duplicate Unique Reference ID
-- blank ICS Group Country
-- TEST-UNKNOWN ICS Group Country
-- selected missing dates
-
-However, document every intentionally invalid scenario so automated tests know
-what to expect.
-
-Do not introduce large random quantities of invalid data.
-
-
-40. YES.
-
-Keep the currently unconfirmed/calculated fields blank until the backend
-processing fills them.
-
-Examples include:
-
-Aging fields
-Planned Remediation (Quarter)
-Planned Remediation (Month)
-Planned Remediation (Week)
-Closed By Year
-Closed By Year-month
-QTD
-MTD
-Due In Months
-
-Also leave these unimplemented until rules are confirmed:
-
-Group Apps
-Risk Assesment Require
-
-Do not invent formulas for them.
-
-==================================================
-GENERAL PRINCIPLE
-==================================================
-
-There are three categories of fields:
-
-A. SOURCE FIELDS
-Use synthetic values but do not derive business logic unless confirmed.
-
-B. CONFIRMED DERIVED FIELDS
-Implement only confirmed rules such as:
-- Within SLA?
-- IBS
-- Cluster
-- Business Function Mapping
-- Prioty
-- Planned Remediation Quarter/Month
-- Unplanned classification
-
-C. UNCONFIRMED DERIVED FIELDS
-Leave blank/TODO and do not guess.
-
-Do not attempt to make every synthetic field semantically dependent on every
-other field.
-
-The purpose of this synthetic dataset is to provide controlled development
-and testing data without inventing organizational business rules.
+- data cleaning;
+- Group Apps;
+- Risk Assesment Require;
+- Planned Remediation (Week);
+- Remediated and Remediation Rate on the mar
+- the other calculated template columns (Aging, Closed By Year, QTD, MTD, Average Time To Remediate, Due In Months).
