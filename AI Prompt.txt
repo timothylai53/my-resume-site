@@ -1,714 +1,167 @@
-The current summary visualization is largely correct.
+Week 1: 14 Sep – 18 Sep 2026
+Monday, 14 Sep
 
-Keep the existing three-report design:
+Activity: Internship onboarding and familiarisation
+ Description:
+ Reported for my first day of internship and completed the initial onboarding process. Became familiar with the working environment, communication tools, organisational procedures, and internship responsibilities.
 
-1. Vulnerability Prioritization
-2. Remediation Rate
-3. Remediation Plan
+For 14 Sep specifically, I don't have a detailed activity record, so I've kept this general rather than inventing technical work.
 
-Keep the existing:
+Tuesday, 15 Sep
 
-- Corporate dashboard design
-- Filters
-- KPI cards
-- Charts
-- Hierarchical tables
-- Expand/collapse
-- Distinct-count calculations
-- Drill-down behavior
+Activity: System setup and employee onboarding
+ Description:
+ Continued the onboarding process and verified access to essential work applications. Confirmed that my Outlook account was functioning correctly and attended the Mybenefit Briefing .
 
-Do NOT redesign the interface from scratch.
+What I learned:
+ Gained familiarity with the organisation's communication environment and employee benefit/onboarding processes.
 
-Apply the following refinements.
+Wednesday, 16 Sep
 
-==================================================
-1. BLANK PRIOTY
-==================================================
+Activity: Introduction to work environment and reporting process
+ Description:
+ Continued familiarising myself with the team's working environment and the reporting processes that I would be supporting during my internship.
 
-Keep:
+I have kept this one general because the available records don't show a specific task for 16 Sep.
 
-Include Blank Priority
+Thursday, 17 Sep
 
-optional and OFF by default.
+Activity: Vulnerability management exposure and technical learning
+ Description:
+ Was introduced to the team's vulnerability-management activities and was invited to the WRB CISO VM Weekly Sync. I was also invited to the Reduce OSS Vulnerability Exposure with Validated Drop-In Replacements | Launch Session, providing exposure to vulnerability-related technical discussions.
 
-The normal Vulnerability Prioritization report should display:
+What I learned:
+ Developed an initial understanding of vulnerability management activities and how security-related discussions are conducted within an enterprise environment.
 
-P1
-P2
-P3
-P4
+Friday, 18 Sep
 
-Do not show "(blank)" as a normal Priority category unless the user enables:
+Activity: VM reporting dataset and Excel data preparation
+ Description:
+ Started working with vulnerability-management reporting data. Obtained access to the dataset Full Dataset ROWG Monthly (20).xlsx and worked on reporting logic involving Within SLA and Cluster classification. I also clarified country-to-cluster mappings, including Australia being mapped to ASEAN and Global being mapped to Group.
 
-Include Blank Priority
+I also attended the Organization Overview - WRB CISO , which provided further exposure to the organisational context of the team.
 
-Keep an explanatory message such as:
+What I learned:
+ Improved my understanding of vulnerability reporting datasets, Excel-based classification, SLA reporting, and cluster mapping.
 
-"562 vulnerabilities without Prioty are excluded from this view."
+Week 2: 21 Sep – 25 Sep 2026
+Monday, 21 Sep
 
-Do not hardcode 562.
+Activity: Administrative documentation and vulnerability reporting
+ Description:
+ Continued working on internship and organisational requirements while supporting vulnerability-reporting activities. Completed the required university form signing process and submitted the signed document for company stamping.
 
-Calculate the excluded count dynamically from the selected processing run and
-current applicable filters.
+What I learned:
+ Learned how internship documentation and approvals are handled within a corporate environment while continuing to become familiar with the reporting workflow.
 
-==================================================
-2. VULNERABILITY PRIORITIZATION KPI CARDS
-==================================================
+Tuesday, 22 Sep
 
-Show:
+Activity: Excel vulnerability-data processing
+ Description:
+ Continued analysing and preparing vulnerability-management reporting data in Excel, focusing on data matching, classification and reporting-related calculations.
 
-Total Vulnerabilities
-P1
-P2
-P3
-P4
+Wednesday, 23 Sep
 
-Each Priority card may also display its percentage of the currently included
-Priority population.
+Activity: Access management and organisational learning
+ Description:
+ Followed up on the OCIR ID access request required for work activities. I learned that my reporting-line change needed to be completed before the access request could be raised again.
 
-Example conceptually:
+I was also invited to the You're Invited | Ask Me Anything Session with Cezary & Sir Iain.
 
-P1
-120
-12.4%
+What I learned:
+ Gained practical exposure to corporate access-management and approval processes.
 
-Do not calculate percentages against records that have already been excluded
-from the Priority report.
+Thursday, 24 Sep
 
-==================================================
-3. REMEDIATION RATE KPI CARDS
-==================================================
+Activity: Vulnerability reporting and VM team exposure
+ Description:
+ Continued working with vulnerability-management reporting and attended the WRB CISO VM Weekly Sync. The meeting covered topics including vulnerability assessment, remediation schedules, reporting activities and application mapping.
 
-Show:
+What I learned:
+ Developed a better understanding of how vulnerability findings, remediation activities and reporting information are reviewed by the team.
 
-Total Vulnerabilities
-Met SLA
-Breached SLA
-Exception
-Open
-Overdue
+Friday, 25 Sep
 
-Counts must respond to the currently selected filters.
+Activity: Weekly VM report update
+ Description:
+ Completed the addition of weekly data into the VM Report and followed up on the next tasks to continue.
 
-If percentages are displayed, calculate them using the currently filtered
-report population.
+What I learned:
+ Improved my practical understanding of maintaining vulnerability-management reports and preparing weekly reporting data.
 
-==================================================
-4. REMEDIATION PLAN KPI CARDS
-==================================================
+Week 3: 28 Sep – 2 Oct 2026
 
-Do NOT create one KPI card for every Quarter.
+This is where your work becomes much more relevant to your university project.
 
-As reporting periods grow, this would make the dashboard cluttered.
+Monday, 28 Sep
 
-Instead, show high-level cards:
+Activity: Internship project planning and system access
+ Description:
+ Started working on my university internship project proposal and planned to discuss the proposed idea with the team.
 
-Total Vulnerabilities
-Planned
-Unplanned
+A request for MSTR access was also submitted so that I could support VM reporting work.
 
-Confirmed:
+What I learned:
+ Began identifying how the existing vulnerability-reporting activities could be connected to a suitable internship development project.
 
-Remediation Planned Date blank
--> Unplanned
+Tuesday, 29 Sep
 
-A record with a valid Remediation Planned Date is part of Planned.
+Activity: VM reporting and project requirements analysis
+ Description:
+ Continued analysing the existing vulnerability-management reporting process and relevant Excel files. Received the location of the CISO MI reporting files for reference and continued studying the current reporting workflow.
 
-Keep individual Quarter and Month information in the chart and summary table.
+What I learned:
+ Developed a clearer understanding of the structure of the existing reporting process and started identifying areas that could potentially be automated.
 
-==================================================
-5. BUSINESS FUNCTION FILTER
-==================================================
+Wednesday, 30 Sep
 
-Keep raw and mapped Business Function semantically separate.
+Activity: Internship project proposal and prototype preparation
+ Description:
+ Prepared the university project proposal for a Web-Based Vulnerability Management Reporting Automation System. The proposed system focuses on automating data input and validation, business-rule processing and dashboard reporting.
 
-If filtering the original source field, label the filter:
+I also prepared prototype screenshots covering areas such as the login screen, dashboard, dataset upload and remediation views.
 
-Business Function
+What I learned:
+ Improved my understanding of translating an existing manual business process into requirements for a software-based solution.
 
-If filtering the standardized:
+Thursday, 1 Oct
 
-IVS
-AVS
-CVE
-PT
+Activity: VM report development and project proposal refinement
+ Description:
+ Continued working with the VM reporting workbook WRB_CISO_MI_PT_2026_Tracker - 28 Sep, which contains vulnerability-reporting PivotTable information and remediation-related reporting data.
 
-classification, label the filter:
+I also continued refining the internship project proposal describing the proposed reporting automation system.
 
-Mapped Business Function
+What I learned:
+ Strengthened my Excel data-processing skills and developed a clearer understanding of how the existing spreadsheet workflow can be translated into automated system requirements.
 
-Do NOT call the standardized four-category field "Business Function" because
-that would make it unclear whether the user is filtering raw or processed data.
+Friday, 2 Oct
 
-==================================================
-6. DATA-AS-OF INFORMATION
-==================================================
+Activity: Monthly VM reporting and SVLM technology exposure
+ Description:
+ Started working with the monthly reporting file after being informed that it was available in SharePoint.
 
-Continue displaying:
+I also attended part of the Invitation to GenBI SVLM Demo. The demo invitation described GenBI as an AI-powered conversational analytics solution for interacting with SVLM reports and data using natural-language questions.
 
-Data as of <Report End Date>
+What I learned:
+ Gained exposure to monthly vulnerability-reporting activities and learned how AI-based conversational analytics can be applied to vulnerability-management information.
 
-Example:
+Week 4 starts today: 5 Oct 2026
 
-Data as of 31 Aug 2026
+For Monday, 5 Oct, a suitable entry so far would be:
 
-Do NOT hardcode the date.
+Activity: Internship project proposal review preparation
 
-Retrieve it from processing-run metadata.
+Description:
+ Finalised updates to my university internship project proposal for the Web-Based Vulnerability Management Reporting Automation System and prepared to discuss the proposal with my supervisor. I contacted Appaduria, Aravind Kumar to arrange a short discussion regarding the project proposal.
 
-Also display the relevant processed source filename where appropriate.
+What I learned:
+ Improved my ability to define project objectives, scope, methodology and technical requirements based on an actual workplace reporting process.
 
-==================================================
-7. REPORTING PERIOD / PROCESSING RUN
-==================================================
+Important
 
-The latest completed processing run should remain the default.
+I deliberately kept some days such as 14, 16 and 22 Sep more general because I don't have a specific work record proving exactly what you did on those dates. That is better for a university logbook than inventing activities.
 
-However, design the page so historical reporting periods can later be selected.
+From now onward, we can keep building it day by day from 14 Sep, so by the end of your internship you won't need to reconstruct everything again.
 
-Conceptually:
-
-Reporting Period
-[ August 2026 ▼ ]
-
-When historical runs exist, users should eventually be able to switch between
-them without uploading the file again.
-
-Do not implement artificial historical periods if only one processing run
-currently exists.
-
-==================================================
-8. ACTIVE FILTER SUMMARY
-==================================================
-
-Add a compact active-filter summary.
-
-Example:
-
-Active Filters:
-
-ICS Hierarchy: Wealth and Retail Banking
-Within SLA?: No
-Remediation Status: Open, In Progress
-
-If no filters are active:
-
-All applicable records
-
-Allow individual active filters to be removed easily.
-
-Also retain:
-
-Reset Filters
-
-This is important so screenshots and exported reports clearly show what data
-the user is looking at.
-
-==================================================
-9. FILTER BEHAVIOR
-==================================================
-
-Filters should:
-
-- Support multiple selections where appropriate
-- Display "All" when nothing is selected
-- Display the selected value for one selection
-- Display "2 selected", etc. for multiple selections
-- Update the report without full page reload
-- Update KPIs
-- Update charts
-- Update distributions
-- Update summary tables
-- Update Grand Total
-
-Avoid triggering different calculations between the chart and table.
-
-All visualization components on the page must use the SAME filtered report
-population.
-
-==================================================
-10. FILTER OPTION COUNTS
-==================================================
-
-Where practical, display the available count next to filter values.
-
-Example:
-
-Remediation Status
-
-Open (125)
-In Progress (86)
-Closed (210)
-
-The count should reflect the appropriate current filter context.
-
-Do not implement this if it makes filter performance poor for large reporting
-runs.
-
-This is a usability enhancement, not a required business rule.
-
-==================================================
-11. ROW HIERARCHY
-==================================================
-
-Keep:
-
-Cluster
-    -> ICS Group Country
-
-Default:
-
-Cluster collapsed.
-
-Example:
-
-[+] North Asia
-[+] ASEAN
-[+] Africa
-
-Expanded:
-
-[-] North Asia
-      China
-      KOREA, REPUBLIC OF
-      Taiwan
-
-Keep:
-
-Expand Rows
-Collapse Rows
-
-If row configuration is available, allow only the approved options:
-
-Cluster -> ICS Group Country
-Cluster only
-ICS Group Country only
-
-Do not expose arbitrary database columns.
-
-==================================================
-12. REMEDIATION PLAN COLUMN HIERARCHY
-==================================================
-
-Keep:
-
-Quarter
-    -> Month
-
-Example:
-
-[+] 2026-Q4
-
-expanded:
-
-[-] 2026-Q4
-      Oct-2026
-      Nov-2026
-      Dec-2026
-      Quarter Total
-
-Unplanned must remain a standalone category.
-
-Do NOT create fake child months underneath Unplanned.
-
-Keep Quarter and Month chronologically sorted.
-
-==================================================
-13. CHART DESIGN
-==================================================
-
-Keep charts complementary to the table rather than duplicating everything.
-
-Vulnerability Prioritization:
-
-Stacked bar chart
-Cluster -> P1/P2/P3/P4
-
-Remediation Rate:
-
-Stacked bar chart
-Cluster -> Met SLA/Breached SLA/Exception/Open/Overdue
-
-Remediation Plan:
-
-Use a timeline/bar-style visualization showing Quarter-level planned
-vulnerabilities and Unplanned.
-
-Do not overcrowd charts with every Country by default.
-
-Cluster should be the default chart level.
-
-The table can provide the detailed Country hierarchy.
-
-==================================================
-14. CONSISTENT CATEGORY COLORS
-==================================================
-
-Use consistent category colours throughout the application.
-
-For example:
-
-P1 should always use the same colour wherever P1 appears.
-
-P2 should always use the same colour wherever P2 appears.
-
-Apply the same principle to:
-
-P3
-P4
-Met SLA
-Breached SLA
-Exception
-Open
-Overdue
-Unplanned
-
-Do not allow the same category to randomly change colour between charts.
-
-Use accessible contrast.
-
-==================================================
-15. TABLE/CHART INTERACTION
-==================================================
-
-Where practical, allow a chart segment to act as a filter/drill-down shortcut.
-
-Example:
-
-User selects:
-
-North Asia -> P2
-
-The application may open the same underlying-record drill-down as selecting the
-North Asia/P2 table cell.
-
-Do not create different definitions between chart clicks and table clicks.
-
-Both must use the same reporting filters.
-
-==================================================
-16. DRILL-DOWN
-==================================================
-
-Keep click-to-drill-down.
-
-Clicking a summary cell must open ONLY the records represented by that exact
-cell.
-
-Example:
-
-Current filters:
-ICS Hierarchy = Wealth and Retail Banking
-
-Clicked:
-North Asia -> P2
-
-Drill-down must inherit:
-
-- Current page filters
-- North Asia row condition
-- P2 column condition
-
-Do not show records outside the selected summary population.
-
-==================================================
-17. DRILL-DOWN FIELDS
-==================================================
-
-Ensure drill-down can show:
-
-Unique Reference ID
-CIID
-Cluster
-ICS Group Country
-Mapped Business Function
-Final Severity Rating
-IBS
-Prioty
-Within SLA?
-Remediation Status
-Met or Breached SLA
-Remediation Planned Date
-Planned Remediation Month
-Planned Remediation Quarter
-Data Quality Issues
-
-Raw Business Function may also be shown where useful so users can compare it
-with Mapped Business Function.
-
-==================================================
-18. DRILL-DOWN PAGINATION
-==================================================
-
-Keep server-side drill-down pagination.
-
-Do not retrieve thousands of underlying records at once.
-
-A page size such as 50 is acceptable for the current implementation.
-
-Provide:
-
-Previous
-Next
-Page X of Y
-
-where appropriate.
-
-==================================================
-19. DISTINCT COUNT
-==================================================
-
-This rule is critical.
-
-Every displayed vulnerability count is:
-
-DISTINCT COUNT of Unique Reference ID
-
-This includes:
-
-- KPI cards
-- chart segments
-- distribution counts
-- table cells
-- row subtotals
-- column subtotals
-- Quarter totals
-- Grand Total
-
-Calculate each total independently.
-
-Do NOT create Grand Total by simply adding displayed child cells.
-
-The same Unique Reference ID may occur in more than one child grouping.
-
-Records without a usable Unique Reference ID must not artificially increase
-the vulnerability count.
-
-==================================================
-20. DATA QUALITY VISIBILITY
-==================================================
-
-Add a small Data Quality indicator to the report header or near the report
-metadata.
-
-For example:
-
-Data Quality
-12 warnings
-
-Selecting it may show existing processing/validation warnings.
-
-Do NOT treat data-quality warnings as vulnerabilities.
-
-This is informational so a user can understand whether mappings, IDs or input
-values require review.
-
-Possible existing issues can include:
-
-Missing Unique Reference ID
-Duplicate Unique Reference ID
-Check Mapping
-Unmapped Business Function
-Invalid Date
-Check Input
-
-Only display issues that actually exist for the selected processing run.
-
-==================================================
-21. SOURCE VS CALCULATED FIELD CLARITY
-==================================================
-
-Where useful in drill-down/details, visually distinguish fields produced by
-the processing engine from original source fields.
-
-Examples of calculated/enriched fields include:
-
-Cluster
-IBS
-Mapped Business Function
-Within SLA?
-Prioty
-Planned Remediation Quarter
-Planned Remediation Month
-
-This does not need to clutter the main summary.
-
-The purpose is simply to help troubleshooting and validation.
-
-==================================================
-22. EMPTY STATES
-==================================================
-
-Handle no-result filters gracefully.
-
-If the selected filters produce zero vulnerability records, do NOT show a
-broken or misleading empty chart.
-
-Display something such as:
-
-"No vulnerabilities match the selected filters."
-
-Still show:
-
-Active Filters
-Reset Filters
-
-Do not present zero rows as an application error.
-
-==================================================
-23. LOADING STATES
-==================================================
-
-When summary data is being fetched:
-
-- Do not display stale numbers as though they belong to the new selection.
-- Show appropriate loading/skeleton states.
-- Prevent duplicate requests where practical.
-
-Do not block navigation unnecessarily.
-
-==================================================
-24. ERROR STATES
-==================================================
-
-If the reporting API fails, show a clear report error state.
-
-Do not expose backend stack traces in the UI.
-
-Provide a safe retry action where supported by the existing architecture.
-
-==================================================
-25. EXPORT CURRENT VIEW
-==================================================
-
-Design the reporting interface so the CURRENT filtered summary can eventually
-be exported.
-
-The exported summary should represent:
-
-- Current report type
-- Reporting period
-- Active filters
-- Rows
-- Columns
-- Distinct vulnerability counts
-
-Do not automatically export the entire underlying raw dataset when the user
-only requests a summary.
-
-If export functionality is not currently implemented, keep this as a planned
-enhancement rather than blocking the current report implementation.
-
-==================================================
-26. REPORT CONFIGURATION DISPLAY
-==================================================
-
-Keep the Report Setup information but make it compact.
-
-Show:
-
-Report View
-Rows
-Columns
-Metric
-
-Example:
-
-Report View:
-Vulnerability Prioritization
-
-Rows:
-Cluster -> ICS Group Country
-
-Columns:
-Prioty
-
-Metric:
-Number of Vulnerability
-(Distinct Unique Reference ID)
-
-Do not make users configure technical database concepts.
-
-==================================================
-27. PROCESSING-RUN TRACEABILITY
-==================================================
-
-Every displayed summary must be tied to one completed processing run.
-
-Metadata should make it possible to determine:
-
-- Reporting period
-- Processed filename
-- Processing run
-- Data-as-of date
-
-Do not combine records from different reporting runs unless a future
-cross-period report explicitly requests it.
-
-==================================================
-28. PERFORMANCE
-==================================================
-
-Current in-memory aggregation is acceptable for the synthetic prototype.
-
-However, do not make loading an entire large reporting run into application
-memory a permanent architectural requirement.
-
-Keep the reporting service modular so filtering/aggregation can later move to
-PostgreSQL or another approved scalable implementation.
-
-Do NOT send the complete reporting dataset to React for client-side
-PivotTable calculations.
-
-React should receive aggregated summary results.
-
-Drill-down records should be loaded separately and paginated.
-
-==================================================
-29. RESPONSIVE DESIGN
-==================================================
-
-Preserve the current desktop corporate-dashboard experience.
-
-For narrower screens:
-
-- KPI cards may wrap
-- Filters may stack
-- Tables may scroll horizontally
-
-Do NOT squash the Pivot-style summary table until column labels become
-unreadable.
-
-Desktop screenshots remain the main presentation target for the university
-project.
-
-==================================================
-30. SUMMARY VIEW PRINCIPLE
-==================================================
-
-The final interface should feel like a web-based improvement over the existing
-Excel reporting workflow, NOT an Excel PivotTable copied directly into a
-browser.
-
-Preserve:
-
-- Familiar Cluster/Country hierarchy
-- Familiar filters
-- Familiar reporting categories
-- Exact business calculations
-
-Improve:
-
-- Navigation
-- Filtering
-- Expand/collapse
-- Visualization
-- Drill-down
-- Data-quality visibility
-- Historical run selection
-- Readability
-- Traceability
-
-Do not add features that require new, unconfirmed business rules.
-
-Do not redesign currently working functionality unnecessarily.
+Writing approach: I converted your real work records into concise academic logbook language, emphasising the activity + what you learned, rather than copying chats or internal technical details directly.
