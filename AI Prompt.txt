@@ -1,221 +1,29 @@
-I reviewed the current business-rule summary.
-
-Most of it is correct, but make the following corrections before continuing.
-
-
-1. CLUSTER — IMPORTANT CORRECTION
-
-Cluster is NOT derived from Country.
-
-Cluster must be derived from:
-
-ICS Group Country
-
-using:
-
-Raw Data[ICS Group Country]
--> Cluster Mapping[ICS Group Country]
--> Cluster Mapping[Cluster]
-
-Rules:
-
-Blank ICS Group Country
--> "NA"
-
-Mapped ICS Group Country
--> mapped Cluster
-
-Nonblank ICS Group Country not found in mapping
--> "Check Mapping"
-
-Do NOT use Country as a fallback.
-
-Do NOT parse Country to derive Cluster.
-
-Therefore validation should check unmapped ICS Group Country values, not
-unmapped Country values.
-
-
-2. REQUIRED COLUMNS
-
-For the currently confirmed processing/reporting rules, ensure the source
-structure contains the required fields including:
-
-Unique Reference ID
-CIID
-Business Function
-Final Severity Rating
-Remediation Status
-Remediation Domain
-Remediation Domain Grouping
-ICS Hierarchy
-ICS Group Country
-CJ or IF
-SLA Due Date
-Report End Date
-Remediation Planned Date
-
-A required column means the COLUMN must exist.
-
-It does NOT necessarily mean every record must contain a nonblank value.
-
-For example:
-
-blank Remediation Planned Date
--> valid business state
--> Unplanned
-
-Do not reject the record just because Remediation Planned Date is blank.
-
-
-3. CLUSTER VALIDATION
-
-Replace any validation rule saying:
-
-"Country not in cluster mapping"
-
-with:
-
-"ICS Group Country not in Cluster Mapping"
-
-Country is not the Cluster lookup field.
-
-
-4. WITHIN SLA
-
-Ensure the COMPLETE rule is implemented:
-
-Blank SLA Due Date
--> "No SLA"
-
-Blank Report End Date
--> "No Report End Date"
-
-Invalid date
--> "Invalid Date"
-
-Report End Date < SLA Due Date
--> "Yes"
-
-Report End Date >= SLA Due Date
--> "No"
-
-Therefore equality produces:
-
-"No"
-
-
-5. IBS
-
-Current rule is confirmed:
-
-blank CIID -> blank
-CIID found in IBS reference -> IBS
-CIID not found -> Non-IBS
-
-
-6. BUSINESS FUNCTION MAPPING
-
-Current rule is confirmed:
-
-contains CSR -> IVS
-AVS -> AVS
-IVS -> IVS
-PT -> PT
-SPM -> CVE
-
-CSR matching is case-insensitive CONTAINS matching.
-
-
-7. PRIOTY
-
-The current Priority matrix and top-to-bottom rule precedence are confirmed.
-
-Keep the severity eligibility rule:
-
-Critical -> eligible
-High -> eligible
-Medium + mapped PT -> eligible
-Medium + IVS/AVS/CVE -> blank
-Low -> blank
-
-Required input missing -> blank.
-
-Required input present but invalid/unmapped for an otherwise eligible record
--> Check Input.
-
-
-8. REMEDIATION PLAN
-
-Confirmed:
-
-Blank Remediation Planned Date
--> Unplanned
-
-Valid planned date:
--> derive calendar Quarter
--> derive Month
-
-Reporting hierarchy:
-
-Quarter
-    -> Month
-
-Quarter is shown first and can expand to Month.
-
-Keep chronological ordering.
-
-
-9. REPORTING COUNT
-
-Number of Vulnerability means:
-
-DISTINCT COUNT of Unique Reference ID
-
-For every subtotal and Grand Total, independently calculate the distinct count
-after filters/grouping.
-
-Do NOT create Grand Total by simply adding displayed child counts because the
-same Unique Reference ID might occur in more than one child category.
-
-
-10. UNCONFIRMED RULES
-
-Do NOT currently calculate:
-
-Group Apps
-Risk Assesment Require
-Planned Remediation (Week)
-Plan Date Expired
-Average Time To Remediate
-Aging calculations
-QTD
-MTD
-Due In Months
-Closed By Year/month
-
-Keep them blank/TODO until rules are provided.
-
-
-11. MARKETS REPORT
-
-Mapped Business Function may be used to identify:
-
-PT
-CVE
-IVS
-AVS
-
-However, do not invent calculations for:
-
-Remediated
-Remediation Rate
-Planned within Target
-Plan Date Expired
-Residual
-
-until I provide those business rules.
-
-
-After applying these corrections, update the business-rule documentation and
-automated tests so the implementation and documentation remain consistent.
+No, the summary reports have no calculation problems. On your current data (run 7, 1,000 records) I recomputed every number in all three views with a separate pandas calculation:
+
+┌────────────────────────┬──────────────────────────────────────────────────────────────┬────────────┬────────────┐
+│          View          │                        Filters tested                        │   Cells    │ Mismatches │
+│                        │                                                              │  checked   │            │
+├────────────────────────┼──────────────────────────────────────────────────────────────┼────────────┼────────────┤
+│ Vulnerability          │ none; blanks included; Status = Open + In Progress with      │ 936        │ 0          │
+│ Prioritization         │ Within SLA = No; one ICS Hierarchy value                     │            │            │
+├────────────────────────┼──────────────────────────────────────────────────────────────┼────────────┼────────────┤
+│ Remediation Rate       │ none; Business Function = IVS + CVE with Severity = Critical │ 540        │ 0          │
+│                        │  + High                                                      │            │            │
+├────────────────────────┼──────────────────────────────────────────────────────────────┼────────────┼────────────┤
+│ Remediation Plan       │ none; Prioty = P1 + P2                                       │ 1,288      │ 0          │
+└────────────────────────┴──────────────────────────────────────────────────────────────┴────────────┴────────────┘
+
+The structure also matches your spec:
+- Rows: Cluster → ICS Group Country, with NA and Check Mapping listed last. Group now contains only "Group".
+- Remediation Rate columns: Met SLA, Breached SLA, Exception, Open, Overdue.
+- Remediation Plan columns: 2026-Q3 → Sep; 2026-Q4 → Oct, Nov, Dec; 2027-Q1 → Jan, Feb, Mar; 2027-Q2 → Apr; then Unplanned with no months.
+
+Three things to confirm (behaviour I chose, not mistakes)
+
+1. Vulnerability Prioritization shows 438 and hides 562 records whose Prioty is blank (severity not eligible). An Excel PivotTable would normally show a "(blank)" column unless it's filtered out. Should the default be hidden, as now, or shown?
+2. Remediation Plan counts every status by default, including Closed and Remediated records that still have a planned date. Does your Excel report count only open items (Open / In Progress / Overdue), or everything? Today you'd need the Remediation Status filter to narrow it.
+3. Remediation Rate uses Met or Breached SLA exactly as it appears in your file. That's fine if your source always supplies it; if Excel calculates it, I'll need the rule.
+
+One limitation of the test data
+
+Your current file has no duplicate Unique Reference IDs, so on this data a distinct count equals a row count. The automated tests do cover duplicates (for example "A, A, B, C = 3", and a total being lower than the sum of its children), but your real data will be the first true test of that at scale.
