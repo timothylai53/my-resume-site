@@ -1,695 +1,491 @@
-I want you to create professional flowcharts for my university internship
-project:
+Create a professional BUSINESS RULE FLOWCHART for this workflow:
+
+REMOTE EXPOSURE MEDIUM MONTHLY REPORTING
+
+This flowchart is for my university internship project:
 
 Vulnerability Management Reporting Automation System
 
-I need flowcharts that explain:
-
-1. SYSTEM WORKFLOW
-2. VM REPORT BUSINESS-RULE PROCESSING
-3. END-TO-END FLOW FROM RAW DATA TO SUMMARY DASHBOARD
-
-These diagrams will be used in my university project documentation.
+The purpose of the diagram is to explain how the existing monthly Excel
+Remote Exposure Medium reporting process works, starting from the four
+Medium datasets, performing the monthly lookups against the ROWG Detailed
+Dataset, generating the month-end snapshot fields, and then refreshing the
+summary report.
 
 IMPORTANT:
-Use ONLY the confirmed rules below.
 
-Do not invent missing business rules.
+Use ONLY the business rules below.
 
-Where a rule is not confirmed, label it:
+Do NOT invent additional calculations or mappings.
 
-Future Rule / TODO
+The flowchart should be suitable for a university report and easy for both
+technical and non-technical readers to understand.
 
-The diagrams should be professional, concise, and easy for a lecturer or
-non-technical reader to understand.
+Use:
 
-Use consistent shapes:
+- Rounded rectangle = Start / End
+- Document shape = Excel/input dataset
+- Rectangle = Processing step
+- Diamond = Decision
+- Database/reference shape = ROWG Detailed Dataset
+- Warning/error shape = unmatched lookup or data-quality issue
 
-Rounded rectangle = Start / End
-Rectangle = Process
-Diamond = Decision
-Cylinder = Database / stored data
-Document = Excel/input file
+Use a professional blue/teal corporate style.
 
-Use arrows to clearly show processing direction.
-
-Use a professional blue/teal corporate style consistent with the existing
-application prototype.
+Keep the diagram readable on an A4 report page.
 
 ==================================================
-FLOWCHART 1 — SYSTEM WORKFLOW
+TITLE
 ==================================================
 
-Title:
+Remote Exposure Medium Monthly Reporting Business Rule Flow
 
-Vulnerability Management Reporting Automation System Workflow
+==================================================
+1. START MONTHLY PROCESS
+==================================================
 
-Create the following high-level workflow:
+START
+
+↓
+
+Determine Current Reporting Month
+
+↓
+
+Determine Month-End Date
+
+Example:
+
+September 2026
+→ 30 Sep 2026
+
+The month-end date is used in the four new monthly snapshot column names.
+
+For September 2026:
+
+Remediation Status (30 Sep)
+
+Remediation Domain (30 Sep)
+
+Planned Remediation (Month) (30 Sep)
+
+Final Severity Rating (30 Sep)
+
+
+IMPORTANT:
+
+This is a monthly snapshot process.
+
+Each reporting month receives its own dated columns.
+
+Do NOT represent the process as overwriting previous monthly snapshot columns.
+
+==================================================
+2. MEDIUM DATA SOURCES
+==================================================
+
+Show the process starting with FOUR Medium datasets:
+
+Medium - PT
+
+Medium - CVE
+
+Medium - IVS
+
+Medium - AVS
+
+The same four monthly output fields must be populated for each dataset.
+
+However, the matching key is DIFFERENT for CVE.
+
+==================================================
+3. DETERMINE MATCHING KEY
+==================================================
+
+After selecting/processing a Medium dataset, use a decision:
+
+Which Medium dataset is being processed?
+
+Branch A:
+
+PT / IVS / AVS
+
+Use:
+
+Current Sheet[Unique Reference ID]
+
+as the lookup key.
+
+Branch B:
+
+CVE
+
+Use:
+
+Current Sheet[Unique ID (SPM+Hostname)]
+
+as the lookup key.
+
+IMPORTANT:
+
+Do NOT use the normal Unique Reference ID matching method for CVE.
+
+For CVE the current-sheet composite identifier:
+
+Unique ID (SPM+Hostname)
+
+must be used.
+
+==================================================
+4. LOOKUP AGAINST ROWG DETAILED DATASET
+==================================================
+
+Both branches then connect to:
+
+ROWG Detailed Dataset - Monthly
+
+The lookup field in this dataset is:
+
+Unique Reference ID
+
+Therefore:
+
+PT:
+Current[Unique Reference ID]
+→ Dataset[Unique Reference ID]
+
+IVS:
+Current[Unique Reference ID]
+→ Dataset[Unique Reference ID]
+
+AVS:
+Current[Unique Reference ID]
+→ Dataset[Unique Reference ID]
+
+CVE:
+Current[Unique ID (SPM+Hostname)]
+→ Dataset[Unique Reference ID]
+
+Use exact identifier matching.
+
+==================================================
+5. MATCH FOUND?
+==================================================
+
+After performing the lookup, add a decision:
+
+Matching record found?
+
+YES
+→ Continue to monthly field enrichment.
+
+NO
+→ Flag as Unmatched / Data Quality Issue.
+
+Do NOT infer a value from another row.
+
+Do NOT substitute a neighbouring asset.
+
+Do NOT silently ignore unmatched identifiers.
+
+Then preserve the record for review.
+
+==================================================
+6. MONTHLY LOOKUP 1
+REMEDIATION STATUS
+==================================================
+
+For a successfully matched record:
+
+Retrieve:
+
+ROWG Detailed Dataset[Updated Remediation Status]
+
+IMPORTANT:
+
+Use:
+
+Updated Remediation Status
+
+NOT the normal Remediation Status field.
+
+Write the lookup result to:
+
+Remediation Status (<Month-End Date>)
+
+For September 2026:
+
+Remediation Status (30 Sep)
+
+Example flow:
+
+Matching Key
+    ↓
+ROWG Detailed Dataset
+    ↓
+Updated Remediation Status
+    ↓
+Remediation Status (30 Sep)
+
+==================================================
+7. MONTHLY LOOKUP 2
+REMEDIATION DOMAIN
+==================================================
+
+Retrieve:
+
+ROWG Detailed Dataset[Remediation Domain]
+
+Write the result to:
+
+Remediation Domain (<Month-End Date>)
+
+For September:
+
+Remediation Domain (30 Sep)
+
+Flow:
+
+Matching Key
+    ↓
+ROWG Detailed Dataset
+    ↓
+Remediation Domain
+    ↓
+Remediation Domain (30 Sep)
+
+==================================================
+8. MONTHLY LOOKUP 3
+PLANNED REMEDIATION MONTH
+==================================================
+
+Retrieve:
+
+ROWG Detailed Dataset[Remediation Planned Date]
+
+Then process the returned value.
+
+If it is a valid date:
+
+Convert it to:
+
+yyyy-mm
+
+Examples:
+
+15-Sep-2026
+→ 2026-09
+
+31-Dec-2026
+→ 2026-12
+
+23-Jun-2027
+→ 2027-06
+
+Write the result to:
+
+Planned Remediation (Month) (<Month-End Date>)
+
+For September:
+
+Planned Remediation (Month) (30 Sep)
+
+
+If the source contains a defined non-date state such as:
+
+No Plan Date
+
+or:
+
+Plan Date Expired
+
+preserve the defined state rather than inventing a fake month.
+
+Do NOT turn those values into arbitrary dates.
+
+==================================================
+9. MONTHLY LOOKUP 4
+FINAL SEVERITY RATING
+==================================================
+
+Retrieve:
+
+ROWG Detailed Dataset[Final Severity Rating]
+
+Write the result to:
+
+Final Severity Rating (<Month-End Date>)
+
+For September:
+
+Final Severity Rating (30 Sep)
+
+Flow:
+
+Matching Key
+    ↓
+ROWG Detailed Dataset
+    ↓
+Final Severity Rating
+    ↓
+Final Severity Rating (30 Sep)
+
+IMPORTANT:
+
+Use the current Final Severity Rating returned by the detailed dataset.
+
+Do not automatically assume the value remains Medium simply because the
+record originated from a Medium reporting sheet.
+
+==================================================
+10. COMPLETE ONE RECORD
+==================================================
+
+Once all four monthly fields have been populated:
+
+Remediation Status (<Month-End>)
+
+Remediation Domain (<Month-End>)
+
+Planned Remediation (Month) (<Month-End>)
+
+Final Severity Rating (<Month-End>)
+
+↓
+
+Mark Current Record as Monthly Snapshot Enriched
+
+↓
+
+More records in current Medium dataset?
+
+YES
+→ Process next record
+
+NO
+→ Continue
+
+==================================================
+11. COMPLETE ALL MEDIUM DATASETS
+==================================================
+
+After finishing one dataset:
+
+More Medium datasets?
+
+YES
+→ Process next:
+
+PT / CVE / IVS / AVS
+
+NO
+→ Continue to summary refresh.
+
+==================================================
+12. DATA QUALITY VALIDATION
+==================================================
+
+Before refreshing the monthly summary, show a validation stage.
+
+Check for:
+
+- Missing lookup key
+- Unmatched lookup key
+- Duplicate/ambiguous lookup
+- Malformed identifier
+- Invalid planned remediation date
+- Missing lookup result where applicable
+
+Pay particular attention to CVE because its current-sheet matching key is:
+
+Unique ID (SPM+Hostname)
+
+Do not automatically delete problematic records.
+
+Flag them for review.
+
+==================================================
+13. REFRESH MONTHLY SUMMARY
+==================================================
+
+Once monthly enrichment is complete:
+
+PT
+CVE
+IVS
+AVS
+
+↓
+
+Use the new Month-End snapshot fields
+
+↓
+
+Refresh Existing Remote Exposure Medium Summary
+
+The summary should use the newly populated monthly snapshot fields for the
+current reporting cycle.
+
+Do NOT invent a new summary aggregation structure in this flowchart.
+
+Represent it simply as:
+
+Enriched Monthly Medium Data
+        ↓
+Refresh Existing Summary
+        ↓
+Remote Exposure Medium Monthly Report
+
+==================================================
+14. MONTHLY HISTORY
+==================================================
+
+Show that the process repeats each month.
+
+Example:
+
+September 2026:
+
+Remediation Status (30 Sep)
+Remediation Domain (30 Sep)
+Planned Remediation (Month) (30 Sep)
+Final Severity Rating (30 Sep)
+
+
+October 2026:
+
+Remediation Status (31 Oct)
+Remediation Domain (31 Oct)
+Planned Remediation (Month) (31 Oct)
+Final Severity Rating (31 Oct)
+
+
+November 2026:
+
+Remediation Status (30 Nov)
+Remediation Domain (30 Nov)
+Planned Remediation (Month) (30 Nov)
+Final Severity Rating (30 Nov)
+
+IMPORTANT:
+
+Use the actual last calendar day of the reporting month.
+
+The purpose is to preserve month-end history rather than overwrite older
+monthly snapshots.
+
+==================================================
+15. FINAL FLOWCHART STRUCTURE
+==================================================
+
+The final diagram should approximately follow:
 
 START
   ↓
-User Login
+Determine Reporting Month
   ↓
-Upload Raw Vulnerability Dataset
+Determine Month-End Date
   ↓
-Upload / Select Reference Data
-  ├── IBS Reference Data
-  ├── Cluster Mapping
-  ├── Business Function Mapping
-  └── Prioty Rules
+Load ROWG Detailed Dataset
   ↓
-Validate Uploaded Dataset
-  ↓
-Validation Successful?
-  ├── NO
-  │     ↓
-  │   Display Validation Errors / Warnings
-  │     ↓
-  │   User Reviews Input
-  │
-  └── YES
-        ↓
-      Process Dataset
-        ↓
-      Apply VM Report Business Rules
-        ↓
-      Generate Processed Reporting Fields
-        ↓
-      Store Reporting Data
-        ↓
-      Generate Summary / Aggregation Data
-        ↓
-      Display Vulnerability Dashboard
-        ↓
-      User Applies Filters / Expands Hierarchies
-        ↓
-      User Views Summary
-        ↓
-      User Drills Down to Vulnerability Records
-        ↓
-       END
-
-
-==================================================
-VALIDATION DETAIL
-==================================================
-
-Inside the validation process, show that the system checks items such as:
-
-- Required columns
-- Missing Unique Reference ID
-- Duplicate Unique Reference ID
-- Invalid dates
-- Missing required input values
-- Unmapped ICS Group Country
-- Unmapped Business Function
-- Invalid CJ or IF values
-
-IMPORTANT:
-
-Validation issues should be reported.
-
-Do not represent validation as automatically deleting records.
-
-
-==================================================
-FLOWCHART 2 — VM REPORT BUSINESS-RULE PROCESSING
-==================================================
-
-Title:
-
-VM Report Business Rule Processing Flow
-
-Start with:
-
-Validated Raw Vulnerability Record
-        ↓
-
-Then show the following business-rule processing.
-
-
-==================================================
-A. CLUSTER
-==================================================
-
-Input:
-
-ICS Group Country
-
-NOT Country.
-
-Flow:
-
-ICS Group Country
-        ↓
-Is ICS Group Country blank?
-   ├── YES
-   │      ↓
-   │   Cluster = NA
-   │
-   └── NO
-          ↓
-      Lookup ICS Group Country
-      in Cluster Mapping
-          ↓
-      Mapping found?
-       ├── YES
-       │      ↓
-       │   Cluster = mapped Cluster
-       │
-       └── NO
-              ↓
-           Cluster = Check Mapping
-
-
-==================================================
-B. IBS
-==================================================
-
-Input:
-
-CIID
-
-Flow:
-
-CIID
- ↓
-Is CIID blank?
- ├── YES
- │      ↓
- │    IBS = blank
- │
- └── NO
-        ↓
-    Does CIID exist in IBS Reference Data?
-       ├── YES
-       │      ↓
-       │   IBS = IBS
-       │
-       └── NO
-              ↓
-           IBS = Non-IBS
-
-
-==================================================
-C. BUSINESS FUNCTION MAPPING
-==================================================
-
-Input:
-
-Business Function
-
-Flow:
-
-Business Function
-      ↓
-Contains "CSR"?
- ├── YES → Mapped Business Function = IVS
- │
- └── NO
-       ↓
-     Exact value?
-       ├── AVS → AVS
-       ├── IVS → IVS
-       ├── PT  → PT
-       ├── SPM → CVE
-       └── Other → Unmapped / Check Input
-
-CSR contains matching is case-insensitive.
-
-
-==================================================
-D. WITHIN SLA
-==================================================
-
-Inputs:
-
-SLA Due Date
-Report End Date
-
-Confirmed rules:
-
-SLA Due Date blank?
- ├── YES
- │      ↓
- │   Within SLA? = No SLA
- │
- └── NO
-       ↓
-   Report End Date blank?
-       ├── YES
-       │      ↓
-       │   Within SLA? = No Report End Date
-       │
-       └── NO
-              ↓
-          Are the dates valid?
-             ├── NO
-             │      ↓
-             │   Within SLA? = Invalid Date
-             │
-             └── YES
-                    ↓
-               Is Report End Date < SLA Due Date?
-                  ├── YES
-                  │      ↓
-                  │   Within SLA? = Yes
-                  │
-                  └── NO
-                         ↓
-                      Within SLA? = No
-
-IMPORTANT:
-
-If:
-
-Report End Date = SLA Due Date
-
-result:
-
-Within SLA? = No
-
-
-==================================================
-E. PRIOTY
-==================================================
-
-IMPORTANT:
-
-Keep the spelling "Prioty" where referring to the existing report/template.
-
-Inputs:
-
-IBS
-Business Function / Mapped Business Function
-CJ or IF
-Final Severity Rating
-
-
-First:
-
-Are required Priority inputs present?
-
-If NO:
-    Prioty = blank
-
-If YES:
-    continue
-
-
-Then apply Severity eligibility.
-
-Eligible:
-
-Critical
-High
-Medium ONLY when Mapped Business Function = PT
-
-Not eligible:
-
-Low
-Medium + IVS
-Medium + AVS
-Medium + CVE
-other noneligible severity
-
-If not eligible:
-
-Prioty = blank
-
-
-If eligible, evaluate in this EXACT ORDER:
-
-1. CJ or IF = IF-CJ
-   → P1
-
-2. CJ or IF = IF
-   AND IBS = IBS
-   → P1
-
-3. CJ or IF = IF
-   AND IBS = Non-IBS
-   AND Mapped Business Function = IVS or AVS
-   → P2
-
-4. CJ or IF = IF
-   AND IBS = Non-IBS
-   AND Mapped Business Function = CVE or PT
-   → P1
-
-5. CJ or IF = CJ
-   → P2
-
-6. CJ or IF = Others
-   AND IBS = IBS
-   → P2
-
-7. CJ or IF = Others
-   AND IBS = Non-IBS
-   AND Mapped Business Function = IVS or AVS
-   → P4
-
-8. CJ or IF = Others
-   AND IBS = Non-IBS
-   AND Mapped Business Function = CVE or PT
-   → P3
-
-If the record is eligible but inputs are present and cannot be mapped/matched:
-
-Prioty = Check Input
-
-
-Include a simplified Prioty matrix in or alongside the diagram:
-
-Condition                IVS   AVS   CVE   PT
-
-IF-CJ                    P1    P1    P1    P1
-IF + IBS                 P1    P1    P1    P1
-IF + Non-IBS             P2    P2    P1    P1
-CJ                       P2    P2    P2    P2
-Others + IBS             P2    P2    P2    P2
-Others + Non-IBS         P4    P4    P3    P3
-
-
-==================================================
-F. PLANNED REMEDIATION
-==================================================
-
-Input:
-
-Remediation Planned Date
-
-Flow:
-
-Remediation Planned Date
-        ↓
-Is date blank?
-   ├── YES
-   │      ↓
-   │   Remediation Plan = Unplanned
-   │
-   └── NO
-          ↓
-      Derive Planned Remediation Quarter
-          ↓
-      Derive Planned Remediation Month
-
-
-Quarter:
-
-Jan-Mar → Q1
-Apr-Jun → Q2
-Jul-Sep → Q3
-Oct-Dec → Q4
-
-Quarter display:
-
-YYYY-Q#
-
-Example:
-
-2026-Q4
-
-
-Month display:
-
-MMM-YYYY
-
-Example:
-
-Oct-2026
-
-
-Reporting hierarchy:
-
-Quarter
-    ↓
-Month
-
-
-Example:
-
-2026-Q4
- ├── Oct-2026
- ├── Nov-2026
- └── Dec-2026
-
-
-Unplanned has no Month child.
-
-
-==================================================
-G. CURRENTLY UNCONFIRMED BUSINESS RULES
-==================================================
-
-Do NOT invent rules for:
-
-Group Apps
-Risk Assesment Require
-Planned Remediation (Week)
-Plan Date Expired
-Average Time To Remediate
-Aging calculations
-QTD
-MTD
-Due In Months
-Closed By Year / Closed By Year-month
-
-If these need to appear in the diagram, show them as:
-
-Future Rule / TODO
-
-Do NOT connect them to invented calculations.
-
-
-==================================================
-FLOWCHART 3 — RAW DATA TO REPORTING SUMMARY
-==================================================
-
-Title:
-
-End-to-End VM Reporting Data Flow
-
-Create a simpler architecture/data-flow diagram:
-
-Raw Vulnerability Dataset
-        +
-Reference / Mapping Data
-        ↓
-Dataset Validation
-        ↓
-VM Business Rule Processing
-        ↓
-Processed Reporting Dataset
-        ↓
-PostgreSQL Reporting Storage
-        ↓
-Reporting / Aggregation Service
-        ↓
-Apply User Selected Filters
-        ↓
-Group by Report Dimensions
-        ↓
-DISTINCT COUNT of Unique Reference ID
-        ↓
-KPI Cards + Charts + Summary Table
-        ↓
-Drill Down to Underlying Records
-
-
-==================================================
-REPORTING / SUMMARY BUSINESS RULES
-==================================================
-
-The reporting metric is:
-
-Number of Vulnerability
-=
-DISTINCT COUNT of Unique Reference ID
-
-This rule applies to:
-
-- KPI cards
-- chart values
-- Pivot-style table cells
-- row totals
-- column totals
-- Grand Total
-
-Each total must be calculated independently using distinct IDs.
-
-Do not simply add child values to create Grand Total.
-
-
-==================================================
-REPORT VIEW 1 — VULNERABILITY PRIORITIZATION
-==================================================
-
-Filters:
-
-Remediation Domain Grouping
-ICS Hierarchy
-Within SLA?
-Remediation Status
-
-Rows:
-
-Cluster
-    → ICS Group Country
-
-Columns:
-
-Prioty
-
-Values:
-
-Distinct Count of Unique Reference ID
-
-Displayed as:
-
-Number of Vulnerability
-
-Output structure:
-
-Cluster / Country
-| P1
-| P2
-| P3
-| P4
-| Grand Total
-
-Records with blank Prioty are hidden by default.
-
-The user can optionally include them.
-
-
-==================================================
-REPORT VIEW 2 — REMEDIATION RATE
-==================================================
-
-Filters:
-
-Remediation Domain Grouping
-ICS Hierarchy
-Business Function
-Within SLA?
-Remediation Status
-SLA Due Date
-Final Severity Rating
-
-Rows:
-
-Cluster
-    → ICS Group Country
-
-Columns:
-
-Met or Breached SLA
-
-Categories currently come directly from the source data:
-
-Met SLA
-Breached SLA
-Exception
-Open
-Overdue
-
-Values:
-
-Distinct Count of Unique Reference ID
-
-
-IMPORTANT:
-
-Do NOT show a calculation flow for deriving Met or Breached SLA because that
-business rule has NOT been confirmed.
-
-Treat Met or Breached SLA as a source field for now.
-
-
-==================================================
-REPORT VIEW 3 — REMEDIATION PLAN
-==================================================
-
-Filters:
-
-Business Function
-Remediation Domain Grouping
-Remediation Status
-ICS Hierarchy
-Within SLA?
-Prioty
-
-Rows:
-
-Cluster
-    → ICS Group Country
-
-Columns:
-
-Planned Remediation Quarter
-    → Planned Remediation Month
-
-Values:
-
-Distinct Count of Unique Reference ID
-
-Default display:
-
-Quarter
-
-Expandable:
-
-Quarter
-    → Month
-
-Also include:
-
-Unplanned
-
-as a separate category.
-
-
-==================================================
-FINAL VISUAL REQUIREMENTS
-==================================================
-
-Create the diagrams so that they are suitable for a university Final Year
-Project / Internship report.
-
-Avoid one giant unreadable diagram.
-
-Create THREE separate diagrams:
-
-Figure 1:
-System Workflow
-
-Figure 2:
-VM Report Business Rule Processing
-
-Figure 3:
-Raw Data to Reporting Summary / Dashboard
-
-Use short labels inside diagram boxes.
-
-Put detailed explanations outside the diagram if necessary.
-
-The diagrams should remain understandable when inserted into an A4 report.
-
-Use consistent terminology with the application:
-
-Raw Data
-Validation
-Processing
-Cluster
-IBS
-Mapped Business Function
-Within SLA?
-Prioty
-Remediation Plan
-Processing Run
-Reporting Summary
-Dashboard
-Drill-down
-
-Do not add rules that are not specified above.
+Select 
