@@ -1,491 +1,407 @@
-Create a professional BUSINESS RULE FLOWCHART for this workflow:
+# Task: Create a CISO Reporting Business Rule Flowchart
 
-REMOTE EXPOSURE MEDIUM MONTHLY REPORTING
+I am working on a **Vulnerability Management Reporting Automation System** for my internship project.
 
-This flowchart is for my university internship project:
+I need you to create a professional business rule flowchart titled:
 
-Vulnerability Management Reporting Automation System
+# CISO Reporting Business Rule Flow
 
-The purpose of the diagram is to explain how the existing monthly Excel
-Remote Exposure Medium reporting process works, starting from the four
-Medium datasets, performing the monthly lookups against the ROWG Detailed
-Dataset, generating the month-end snapshot fields, and then refreshing the
-summary report.
+The purpose of this flowchart is to show how the CISO vulnerability report is prepared, starting from obtaining the latest MI.23 and MI.24 data, updating remediation information, producing MI summaries, and finally updating the historical data and Burndown report.
 
-IMPORTANT:
+---
 
-Use ONLY the business rules below.
+## 1. Data Sources
 
-Do NOT invent additional calculations or mappings.
+The process starts by obtaining the following data:
 
-The flowchart should be suitable for a university report and easy for both
-technical and non-technical readers to understand.
+1. Latest MI.23 data from MSTR
+2. Latest MI.24 data from MSTR
+3. Latest PT Tracker from the Technology Team
+4. Latest CVE/SPM data from MSTR
 
-Use:
+MI.23 and MI.24 must be maintained as separate datasets.
 
-- Rounded rectangle = Start / End
-- Document shape = Excel/input dataset
-- Rectangle = Processing step
-- Diamond = Decision
-- Database/reference shape = ROWG Detailed Dataset
-- Warning/error shape = unmatched lookup or data-quality issue
+---
 
-Use a professional blue/teal corporate style.
+## 2. MI Classification Business Rule
 
-Keep the diagram readable on an A4 report page.
+### MI.23
 
-==================================================
-TITLE
-==================================================
+MI.23 represents:
 
-Remote Exposure Medium Monthly Reporting Business Rule Flow
+- Overdue findings
+- High severity
+- Critical severity
 
-==================================================
-1. START MONTHLY PROCESS
-==================================================
+Represent this business rule as:
 
-START
+`Overdue AND Severity = High/Critical → MI.23`
 
-↓
+### MI.24
 
-Determine Current Reporting Month
+MI.24 represents:
 
-↓
+- Medium severity findings
 
-Determine Month-End Date
+Represent this as:
 
-Example:
+`Severity = Medium → MI.24`
 
-September 2026
-→ 30 Sep 2026
+---
 
-The month-end date is used in the four new monthly snapshot column names.
+## 3. Prepare MI.23 and MI.24 Data
 
-For September 2026:
+For both MI.23 and MI.24 datasets, add/populate these four reporting columns:
 
-Remediation Status (30 Sep)
+1. Within SLA?
+2. Updated Remediation Status
+3. Updated Planned Remediation Month
+4. Updated Planned Remediation Date
 
-Remediation Domain (30 Sep)
+Both MI.23 and MI.24 should pass through the same enrichment/business-rule process.
 
-Planned Remediation (Month) (30 Sep)
+---
 
-Final Severity Rating (30 Sep)
-
-
-IMPORTANT:
-
-This is a monthly snapshot process.
-
-Each reporting month receives its own dated columns.
-
-Do NOT represent the process as overwriting previous monthly snapshot columns.
-
-==================================================
-2. MEDIUM DATA SOURCES
-==================================================
-
-Show the process starting with FOUR Medium datasets:
-
-Medium - PT
-
-Medium - CVE
-
-Medium - IVS
-
-Medium - AVS
-
-The same four monthly output fields must be populated for each dataset.
-
-However, the matching key is DIFFERENT for CVE.
-
-==================================================
-3. DETERMINE MATCHING KEY
-==================================================
-
-After selecting/processing a Medium dataset, use a decision:
-
-Which Medium dataset is being processed?
-
-Branch A:
-
-PT / IVS / AVS
+## 4. Business Rule: Within SLA?
 
 Use:
 
-Current Sheet[Unique Reference ID]
+- Report Week End Date
+- SLA Due Date
 
-as the lookup key.
+Decision logic:
 
-Branch B:
+### Is SLA Due Date available?
 
-CVE
+**No**
+→ Set `Within SLA? = No SLA`
 
-Use:
+**Yes**
+→ Compare Report Week End Date with SLA Due Date.
 
-Current Sheet[Unique ID (SPM+Hostname)]
+### Is Report Week End Date <= SLA Due Date?
 
-as the lookup key.
+**Yes**
+→ Set `Within SLA? = Yes`
 
-IMPORTANT:
+**No**
+→ Set `Within SLA? = No`
 
-Do NOT use the normal Unique Reference ID matching method for CVE.
+Represent this clearly as decision diamonds.
 
-For CVE the current-sheet composite identifier:
+---
 
-Unique ID (SPM+Hostname)
+## 5. Business Rule: Determine PT or CVE/SPM
 
-must be used.
+After calculating SLA status, determine the vulnerability/remediation source.
 
-==================================================
-4. LOOKUP AGAINST ROWG DETAILED DATASET
-==================================================
+Decision:
 
-Both branches then connect to:
+`Is the record PT or CVE/SPM?`
 
-ROWG Detailed Dataset - Monthly
+Create two separate branches.
 
-The lookup field in this dataset is:
+---
 
-Unique Reference ID
+## 6. PT Branch
 
-Therefore:
+For PT records:
 
-PT:
-Current[Unique Reference ID]
-→ Dataset[Unique Reference ID]
-
-IVS:
-Current[Unique Reference ID]
-→ Dataset[Unique Reference ID]
-
-AVS:
-Current[Unique Reference ID]
-→ Dataset[Unique Reference ID]
-
-CVE:
-Current[Unique ID (SPM+Hostname)]
-→ Dataset[Unique Reference ID]
-
-Use exact identifier matching.
-
-==================================================
-5. MATCH FOUND?
-==================================================
-
-After performing the lookup, add a decision:
-
-Matching record found?
-
-YES
-→ Continue to monthly field enrichment.
-
-NO
-→ Flag as Unmatched / Data Quality Issue.
-
-Do NOT infer a value from another row.
-
-Do NOT substitute a neighbouring asset.
-
-Do NOT silently ignore unmatched identifiers.
-
-Then preserve the record for review.
-
-==================================================
-6. MONTHLY LOOKUP 1
-REMEDIATION STATUS
-==================================================
-
-For a successfully matched record:
-
-Retrieve:
-
-ROWG Detailed Dataset[Updated Remediation Status]
-
-IMPORTANT:
+### Match
 
 Use:
 
-Updated Remediation Status
+`Unique Reference ID`
 
-NOT the normal Remediation Status field.
+to search the latest PT Tracker.
 
-Write the lookup result to:
+The latest PT Tracker is used to obtain:
 
-Remediation Status (<Month-End Date>)
+- Latest Remediation Status
+- Latest Remediation Planned Date
 
-For September 2026:
+### Updated Remediation Status Rule
 
-Remediation Status (30 Sep)
+Decision:
 
-Example flow:
+`Is latest PT Remediation Status available?`
 
-Matching Key
-    ↓
-ROWG Detailed Dataset
-    ↓
-Updated Remediation Status
-    ↓
-Remediation Status (30 Sep)
+**Yes**
+→ Use the latest PT Remediation Status
 
-==================================================
-7. MONTHLY LOOKUP 2
-REMEDIATION DOMAIN
-==================================================
+**No**
+→ Retain the existing Remediation Status from the MI dataset
 
-Retrieve:
+---
 
-ROWG Detailed Dataset[Remediation Domain]
+## 7. CVE/SPM Branch
 
-Write the result to:
+For CVE/SPM records:
 
-Remediation Domain (<Month-End Date>)
+Use the latest CVE/SPM data from MSTR.
 
-For September:
+Use the required matching key.
 
-Remediation Domain (30 Sep)
+Where required, matching uses:
 
-Flow:
+`Unique Reference ID + Hostname`
 
-Matching Key
-    ↓
-ROWG Detailed Dataset
-    ↓
-Remediation Domain
-    ↓
-Remediation Domain (30 Sep)
+Use the matched CVE/SPM record to obtain the latest remediation information.
 
-==================================================
-8. MONTHLY LOOKUP 3
-PLANNED REMEDIATION MONTH
-==================================================
+### Updated Remediation Status Rule
 
-Retrieve:
+Decision:
 
-ROWG Detailed Dataset[Remediation Planned Date]
+`Is latest CVE/SPM Remediation Status available?`
 
-Then process the returned value.
+**Yes**
+→ Use latest CVE/SPM Remediation Status
 
-If it is a valid date:
+**No**
+→ Retain existing Remediation Status from the MI dataset
 
-Convert it to:
+---
 
-yyyy-mm
+## 8. Business Rule: Updated Planned Remediation Date
+
+For both PT and CVE/SPM, determine the final planned remediation date.
+
+### Decision 1
+
+`Is a valid latest Remediation Planned Date available?`
+
+**Yes**
+→ Use the latest Remediation Planned Date
+
+**No**
+→ Check the existing MI Remediation Planned Date
+
+### Decision 2
+
+`Is an existing Remediation Planned Date available?`
+
+**Yes**
+→ Retain the existing Remediation Planned Date
+
+**No**
+→ Set:
+
+`Updated Planned Remediation Date = No Plan Date`
+
+The resulting value becomes the final Updated Planned Remediation Date.
+
+---
+
+## 9. Business Rule: Updated Planned Remediation Month
+
+Use the final Updated Planned Remediation Date.
+
+If a valid date exists:
+
+`Updated Planned Remediation Date → Convert to reporting month`
 
 Examples:
 
-15-Sep-2026
-→ 2026-09
+- 30-Sep-2026 → 2026-9
+- 31-Oct-2026 → 2026-10
+- 30-Nov-2026 → 2026-11
+- 31-Mar-2027 → 2027-3
 
-31-Dec-2026
-→ 2026-12
+If:
 
-23-Jun-2027
-→ 2027-06
+`Updated Planned Remediation Date = No Plan Date`
 
-Write the result to:
+then:
 
-Planned Remediation (Month) (<Month-End Date>)
+`Updated Planned Remediation Month = No Plan Date`
 
-For September:
+---
 
-Planned Remediation (Month) (30 Sep)
+## 10. Four Final Reporting Fields
 
+At this point, every relevant MI.23 and MI.24 record should have:
 
-If the source contains a defined non-date state such as:
+- Within SLA?
+- Updated Remediation Status
+- Updated Planned Remediation Month
+- Updated Planned Remediation Date
 
-No Plan Date
+Once these four fields have been prepared, proceed to report summarisation.
 
-or:
+---
 
-Plan Date Expired
+## 11. Generate MI Summaries
 
-preserve the defined state rather than inventing a fake month.
+Create two separate summary paths:
 
-Do NOT turn those values into arbitrary dates.
+`Completed MI.23 Data → MI.23 Summary`
 
-==================================================
-9. MONTHLY LOOKUP 4
-FINAL SEVERITY RATING
-==================================================
+`Completed MI.24 Data → MI.24 Summary`
 
-Retrieve:
+The summaries aggregate the detailed vulnerability data into reporting-level information.
 
-ROWG Detailed Dataset[Final Severity Rating]
+The flowchart should show the two datasets separately before combining them at the CISO reporting level.
 
-Write the result to:
+---
 
-Final Severity Rating (<Month-End Date>)
+## 12. CISO Management Summary
 
-For September:
+Use the MI.23 and MI.24 summary results to support the CISO management-level report.
 
-Final Severity Rating (30 Sep)
+The management summary includes information such as:
 
-Flow:
+- Application Name
+- Overdue
+- Exception
+- Total
+- Planned Remediation By
+- Risk Assessed
+- Remediation Progress
 
-Matching Key
-    ↓
-ROWG Detailed Dataset
-    ↓
-Final Severity Rating
-    ↓
-Final Severity Rating (30 Sep)
+Represent this as:
 
-IMPORTANT:
+`MI.23 Summary + MI.24 Summary → CISO MI Summary`
 
-Use the current Final Severity Rating returned by the detailed dataset.
+---
 
-Do not automatically assume the value remains Medium simply because the
-record originated from a Medium reporting sheet.
+## 13. Historical Data 2026
 
-==================================================
-10. COMPLETE ONE RECORD
-==================================================
+The reporting process also maintains historical MI information.
 
-Once all four monthly fields have been populated:
+After the current MI.23 and MI.24 results are completed, store the required reporting-period results in:
 
-Remediation Status (<Month-End>)
+`Historical Data 2026`
 
-Remediation Domain (<Month-End>)
+Historical Data 2026 maintains previous reporting-period information so that vulnerability movement can be tracked over time.
 
-Planned Remediation (Month) (<Month-End>)
+Represent this relationship as:
 
-Final Severity Rating (<Month-End>)
+`Current MI.23 / MI.24 Results → Historical Data 2026`
 
-↓
+---
 
-Mark Current Record as Monthly Snapshot Enriched
+## 14. Burndown Business Rule
 
-↓
+The Burndown report should NOT directly read the raw MI.23 or MI.24 datasets.
 
-More records in current Medium dataset?
+Its data source is:
 
-YES
-→ Process next record
+`Historical Data 2026`
 
-NO
-→ Continue
+Represent the relationship clearly as:
 
-==================================================
-11. COMPLETE ALL MEDIUM DATASETS
-==================================================
+`MI.23 / MI.24 Results → Historical Data 2026 → Burndown`
 
-After finishing one dataset:
+The Burndown uses the historical reporting information to show vulnerability movement across reporting periods.
 
-More Medium datasets?
+---
 
-YES
-→ Process next:
+# Required Overall Flow
 
-PT / CVE / IVS / AVS
-
-NO
-→ Continue to summary refresh.
-
-==================================================
-12. DATA QUALITY VALIDATION
-==================================================
-
-Before refreshing the monthly summary, show a validation stage.
-
-Check for:
-
-- Missing lookup key
-- Unmatched lookup key
-- Duplicate/ambiguous lookup
-- Malformed identifier
-- Invalid planned remediation date
-- Missing lookup result where applicable
-
-Pay particular attention to CVE because its current-sheet matching key is:
-
-Unique ID (SPM+Hostname)
-
-Do not automatically delete problematic records.
-
-Flag them for review.
-
-==================================================
-13. REFRESH MONTHLY SUMMARY
-==================================================
-
-Once monthly enrichment is complete:
-
-PT
-CVE
-IVS
-AVS
-
-↓
-
-Use the new Month-End snapshot fields
-
-↓
-
-Refresh Existing Remote Exposure Medium Summary
-
-The summary should use the newly populated monthly snapshot fields for the
-current reporting cycle.
-
-Do NOT invent a new summary aggregation structure in this flowchart.
-
-Represent it simply as:
-
-Enriched Monthly Medium Data
-        ↓
-Refresh Existing Summary
-        ↓
-Remote Exposure Medium Monthly Report
-
-==================================================
-14. MONTHLY HISTORY
-==================================================
-
-Show that the process repeats each month.
-
-Example:
-
-September 2026:
-
-Remediation Status (30 Sep)
-Remediation Domain (30 Sep)
-Planned Remediation (Month) (30 Sep)
-Final Severity Rating (30 Sep)
-
-
-October 2026:
-
-Remediation Status (31 Oct)
-Remediation Domain (31 Oct)
-Planned Remediation (Month) (31 Oct)
-Final Severity Rating (31 Oct)
-
-
-November 2026:
-
-Remediation Status (30 Nov)
-Remediation Domain (30 Nov)
-Planned Remediation (Month) (30 Nov)
-Final Severity Rating (30 Nov)
-
-IMPORTANT:
-
-Use the actual last calendar day of the reporting month.
-
-The purpose is to preserve month-end history rather than overwrite older
-monthly snapshots.
-
-==================================================
-15. FINAL FLOWCHART STRUCTURE
-==================================================
-
-The final diagram should approximately follow:
+The overall business-rule flow should approximately follow:
 
 START
-  ↓
-Determine Reporting Month
-  ↓
-Determine Month-End Date
-  ↓
-Load ROWG Detailed Dataset
-  ↓
-Select 
+↓
+Obtain Latest Data
+├── MI.23 from MSTR
+├── MI.24 from MSTR
+├── Latest PT Tracker
+└── Latest CVE/SPM
+↓
+Separate MI.23 and MI.24
+↓
+Add/Calculate Four Reporting Fields
+↓
+Calculate Within SLA?
+↓
+Determine PT or CVE/SPM
+↓
+┌─────────────────────┬─────────────────────┐
+│ PT                  │ CVE/SPM             │
+│ Match Unique ID     │ Match required key  │
+│                     │ ID + Hostname where │
+│                     │ required            │
+└─────────────────────┴─────────────────────┘
+↓
+Get Latest Remediation Status
+↓
+Latest value available?
+├── Yes → Use latest value
+└── No → Keep existing value
+↓
+Get Latest Planned Remediation Date
+↓
+Latest date available?
+├── Yes → Use latest date
+└── No
+     ↓
+     Existing date available?
+     ├── Yes → Keep existing date
+     └── No → No Plan Date
+↓
+Calculate Updated Planned Remediation Month
+↓
+Four Reporting Fields Completed
+↓
+┌────────────────────┬────────────────────┐
+│ MI.23 Summary      │ MI.24 Summary      │
+└────────────────────┴────────────────────┘
+↓
+CISO MI Summary
+↓
+Update Historical Data 2026
+↓
+Burndown
+↓
+CISO Weekly Report Completed
+↓
+END
+
+---
+
+# Flowchart Design Requirements
+
+Create the flowchart using standard flowchart notation:
+
+- **Oval** → Start / End
+- **Rectangle** → Process
+- **Diamond** → Business rule / decision
+- **Cylinder** → Data source or historical data storage
+- **Arrows** → Process flow
+
+Use a professional and clean visual style suitable for a university internship project report.
+
+## Layout Requirements
+
+- Use a top-to-bottom layout.
+- Keep MI.23 and MI.24 visually separate where appropriate.
+- Clearly separate PT and CVE/SPM processing branches.
+- Clearly label all Yes/No branches.
+- Merge PT and CVE/SPM flows after their lookup/update processes are completed.
+- Clearly distinguish between input data, calculations, decisions, summaries, and outputs.
+- Show Historical Data 2026 as the source for the Burndown.
+- Avoid overcrowding the diagram.
+- Do not place long Excel formulas inside flowchart boxes.
+- Use short, clear business terminology.
+- Do not invent additional business rules.
+- Do not change the supplied business logic.
+
+---
+
+# Important
+
+This is a **business rule flowchart**, not a software architecture diagram.
+
+Focus on:
+
+1. What data enters the process
+2. What business decisions are made
+3. How the latest remediation information is selected
+4. What happens when information is unavailable
+5. How MI.23 and MI.24 are summarised
+6. How Historical Data 2026 feeds the Burndown
+7. What final CISO reporting outputs are produced
+
+Before producing the final diagram, check that every decision has the correct Yes/No path and that no business rule from this prompt has been omitted.
+
+Please generate the final flowchart in **Mermaid flowchart syntax** so I can easily review, modify, and convert it into an image for my report.
