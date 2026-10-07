@@ -1,167 +1,695 @@
-Week 1: 14 Sep – 18 Sep 2026
-Monday, 14 Sep
+I want you to create professional flowcharts for my university internship
+project:
 
-Activity: Internship onboarding and familiarisation
- Description:
- Reported for my first day of internship and completed the initial onboarding process. Became familiar with the working environment, communication tools, organisational procedures, and internship responsibilities.
+Vulnerability Management Reporting Automation System
 
-For 14 Sep specifically, I don't have a detailed activity record, so I've kept this general rather than inventing technical work.
+I need flowcharts that explain:
 
-Tuesday, 15 Sep
+1. SYSTEM WORKFLOW
+2. VM REPORT BUSINESS-RULE PROCESSING
+3. END-TO-END FLOW FROM RAW DATA TO SUMMARY DASHBOARD
 
-Activity: System setup and employee onboarding
- Description:
- Continued the onboarding process and verified access to essential work applications. Confirmed that my Outlook account was functioning correctly and attended the Mybenefit Briefing .
+These diagrams will be used in my university project documentation.
 
-What I learned:
- Gained familiarity with the organisation's communication environment and employee benefit/onboarding processes.
+IMPORTANT:
+Use ONLY the confirmed rules below.
 
-Wednesday, 16 Sep
+Do not invent missing business rules.
 
-Activity: Introduction to work environment and reporting process
- Description:
- Continued familiarising myself with the team's working environment and the reporting processes that I would be supporting during my internship.
+Where a rule is not confirmed, label it:
 
-I have kept this one general because the available records don't show a specific task for 16 Sep.
+Future Rule / TODO
 
-Thursday, 17 Sep
+The diagrams should be professional, concise, and easy for a lecturer or
+non-technical reader to understand.
 
-Activity: Vulnerability management exposure and technical learning
- Description:
- Was introduced to the team's vulnerability-management activities and was invited to the WRB CISO VM Weekly Sync. I was also invited to the Reduce OSS Vulnerability Exposure with Validated Drop-In Replacements | Launch Session, providing exposure to vulnerability-related technical discussions.
+Use consistent shapes:
 
-What I learned:
- Developed an initial understanding of vulnerability management activities and how security-related discussions are conducted within an enterprise environment.
+Rounded rectangle = Start / End
+Rectangle = Process
+Diamond = Decision
+Cylinder = Database / stored data
+Document = Excel/input file
 
-Friday, 18 Sep
+Use arrows to clearly show processing direction.
 
-Activity: VM reporting dataset and Excel data preparation
- Description:
- Started working with vulnerability-management reporting data. Obtained access to the dataset Full Dataset ROWG Monthly (20).xlsx and worked on reporting logic involving Within SLA and Cluster classification. I also clarified country-to-cluster mappings, including Australia being mapped to ASEAN and Global being mapped to Group.
+Use a professional blue/teal corporate style consistent with the existing
+application prototype.
 
-I also attended the Organization Overview - WRB CISO , which provided further exposure to the organisational context of the team.
+==================================================
+FLOWCHART 1 — SYSTEM WORKFLOW
+==================================================
 
-What I learned:
- Improved my understanding of vulnerability reporting datasets, Excel-based classification, SLA reporting, and cluster mapping.
+Title:
 
-Week 2: 21 Sep – 25 Sep 2026
-Monday, 21 Sep
+Vulnerability Management Reporting Automation System Workflow
 
-Activity: Administrative documentation and vulnerability reporting
- Description:
- Continued working on internship and organisational requirements while supporting vulnerability-reporting activities. Completed the required university form signing process and submitted the signed document for company stamping.
+Create the following high-level workflow:
 
-What I learned:
- Learned how internship documentation and approvals are handled within a corporate environment while continuing to become familiar with the reporting workflow.
+START
+  ↓
+User Login
+  ↓
+Upload Raw Vulnerability Dataset
+  ↓
+Upload / Select Reference Data
+  ├── IBS Reference Data
+  ├── Cluster Mapping
+  ├── Business Function Mapping
+  └── Prioty Rules
+  ↓
+Validate Uploaded Dataset
+  ↓
+Validation Successful?
+  ├── NO
+  │     ↓
+  │   Display Validation Errors / Warnings
+  │     ↓
+  │   User Reviews Input
+  │
+  └── YES
+        ↓
+      Process Dataset
+        ↓
+      Apply VM Report Business Rules
+        ↓
+      Generate Processed Reporting Fields
+        ↓
+      Store Reporting Data
+        ↓
+      Generate Summary / Aggregation Data
+        ↓
+      Display Vulnerability Dashboard
+        ↓
+      User Applies Filters / Expands Hierarchies
+        ↓
+      User Views Summary
+        ↓
+      User Drills Down to Vulnerability Records
+        ↓
+       END
 
-Tuesday, 22 Sep
 
-Activity: Excel vulnerability-data processing
- Description:
- Continued analysing and preparing vulnerability-management reporting data in Excel, focusing on data matching, classification and reporting-related calculations.
+==================================================
+VALIDATION DETAIL
+==================================================
 
-Wednesday, 23 Sep
+Inside the validation process, show that the system checks items such as:
 
-Activity: Access management and organisational learning
- Description:
- Followed up on the OCIR ID access request required for work activities. I learned that my reporting-line change needed to be completed before the access request could be raised again.
+- Required columns
+- Missing Unique Reference ID
+- Duplicate Unique Reference ID
+- Invalid dates
+- Missing required input values
+- Unmapped ICS Group Country
+- Unmapped Business Function
+- Invalid CJ or IF values
 
-I was also invited to the You're Invited | Ask Me Anything Session with Cezary & Sir Iain.
+IMPORTANT:
 
-What I learned:
- Gained practical exposure to corporate access-management and approval processes.
+Validation issues should be reported.
 
-Thursday, 24 Sep
+Do not represent validation as automatically deleting records.
 
-Activity: Vulnerability reporting and VM team exposure
- Description:
- Continued working with vulnerability-management reporting and attended the WRB CISO VM Weekly Sync. The meeting covered topics including vulnerability assessment, remediation schedules, reporting activities and application mapping.
 
-What I learned:
- Developed a better understanding of how vulnerability findings, remediation activities and reporting information are reviewed by the team.
+==================================================
+FLOWCHART 2 — VM REPORT BUSINESS-RULE PROCESSING
+==================================================
 
-Friday, 25 Sep
+Title:
 
-Activity: Weekly VM report update
- Description:
- Completed the addition of weekly data into the VM Report and followed up on the next tasks to continue.
+VM Report Business Rule Processing Flow
 
-What I learned:
- Improved my practical understanding of maintaining vulnerability-management reports and preparing weekly reporting data.
+Start with:
 
-Week 3: 28 Sep – 2 Oct 2026
+Validated Raw Vulnerability Record
+        ↓
 
-This is where your work becomes much more relevant to your university project.
+Then show the following business-rule processing.
 
-Monday, 28 Sep
 
-Activity: Internship project planning and system access
- Description:
- Started working on my university internship project proposal and planned to discuss the proposed idea with the team.
+==================================================
+A. CLUSTER
+==================================================
 
-A request for MSTR access was also submitted so that I could support VM reporting work.
+Input:
 
-What I learned:
- Began identifying how the existing vulnerability-reporting activities could be connected to a suitable internship development project.
+ICS Group Country
 
-Tuesday, 29 Sep
+NOT Country.
 
-Activity: VM reporting and project requirements analysis
- Description:
- Continued analysing the existing vulnerability-management reporting process and relevant Excel files. Received the location of the CISO MI reporting files for reference and continued studying the current reporting workflow.
+Flow:
 
-What I learned:
- Developed a clearer understanding of the structure of the existing reporting process and started identifying areas that could potentially be automated.
+ICS Group Country
+        ↓
+Is ICS Group Country blank?
+   ├── YES
+   │      ↓
+   │   Cluster = NA
+   │
+   └── NO
+          ↓
+      Lookup ICS Group Country
+      in Cluster Mapping
+          ↓
+      Mapping found?
+       ├── YES
+       │      ↓
+       │   Cluster = mapped Cluster
+       │
+       └── NO
+              ↓
+           Cluster = Check Mapping
 
-Wednesday, 30 Sep
 
-Activity: Internship project proposal and prototype preparation
- Description:
- Prepared the university project proposal for a Web-Based Vulnerability Management Reporting Automation System. The proposed system focuses on automating data input and validation, business-rule processing and dashboard reporting.
+==================================================
+B. IBS
+==================================================
 
-I also prepared prototype screenshots covering areas such as the login screen, dashboard, dataset upload and remediation views.
+Input:
 
-What I learned:
- Improved my understanding of translating an existing manual business process into requirements for a software-based solution.
+CIID
 
-Thursday, 1 Oct
+Flow:
 
-Activity: VM report development and project proposal refinement
- Description:
- Continued working with the VM reporting workbook WRB_CISO_MI_PT_2026_Tracker - 28 Sep, which contains vulnerability-reporting PivotTable information and remediation-related reporting data.
+CIID
+ ↓
+Is CIID blank?
+ ├── YES
+ │      ↓
+ │    IBS = blank
+ │
+ └── NO
+        ↓
+    Does CIID exist in IBS Reference Data?
+       ├── YES
+       │      ↓
+       │   IBS = IBS
+       │
+       └── NO
+              ↓
+           IBS = Non-IBS
 
-I also continued refining the internship project proposal describing the proposed reporting automation system.
 
-What I learned:
- Strengthened my Excel data-processing skills and developed a clearer understanding of how the existing spreadsheet workflow can be translated into automated system requirements.
+==================================================
+C. BUSINESS FUNCTION MAPPING
+==================================================
 
-Friday, 2 Oct
+Input:
 
-Activity: Monthly VM reporting and SVLM technology exposure
- Description:
- Started working with the monthly reporting file after being informed that it was available in SharePoint.
+Business Function
 
-I also attended part of the Invitation to GenBI SVLM Demo. The demo invitation described GenBI as an AI-powered conversational analytics solution for interacting with SVLM reports and data using natural-language questions.
+Flow:
 
-What I learned:
- Gained exposure to monthly vulnerability-reporting activities and learned how AI-based conversational analytics can be applied to vulnerability-management information.
+Business Function
+      ↓
+Contains "CSR"?
+ ├── YES → Mapped Business Function = IVS
+ │
+ └── NO
+       ↓
+     Exact value?
+       ├── AVS → AVS
+       ├── IVS → IVS
+       ├── PT  → PT
+       ├── SPM → CVE
+       └── Other → Unmapped / Check Input
 
-Week 4 starts today: 5 Oct 2026
+CSR contains matching is case-insensitive.
 
-For Monday, 5 Oct, a suitable entry so far would be:
 
-Activity: Internship project proposal review preparation
+==================================================
+D. WITHIN SLA
+==================================================
 
-Description:
- Finalised updates to my university internship project proposal for the Web-Based Vulnerability Management Reporting Automation System and prepared to discuss the proposal with my supervisor. I contacted Appaduria, Aravind Kumar to arrange a short discussion regarding the project proposal.
+Inputs:
 
-What I learned:
- Improved my ability to define project objectives, scope, methodology and technical requirements based on an actual workplace reporting process.
+SLA Due Date
+Report End Date
 
-Important
+Confirmed rules:
 
-I deliberately kept some days such as 14, 16 and 22 Sep more general because I don't have a specific work record proving exactly what you did on those dates. That is better for a university logbook than inventing activities.
+SLA Due Date blank?
+ ├── YES
+ │      ↓
+ │   Within SLA? = No SLA
+ │
+ └── NO
+       ↓
+   Report End Date blank?
+       ├── YES
+       │      ↓
+       │   Within SLA? = No Report End Date
+       │
+       └── NO
+              ↓
+          Are the dates valid?
+             ├── NO
+             │      ↓
+             │   Within SLA? = Invalid Date
+             │
+             └── YES
+                    ↓
+               Is Report End Date < SLA Due Date?
+                  ├── YES
+                  │      ↓
+                  │   Within SLA? = Yes
+                  │
+                  └── NO
+                         ↓
+                      Within SLA? = No
 
-From now onward, we can keep building it day by day from 14 Sep, so by the end of your internship you won't need to reconstruct everything again.
+IMPORTANT:
 
-Writing approach: I converted your real work records into concise academic logbook language, emphasising the activity + what you learned, rather than copying chats or internal technical details directly.
+If:
+
+Report End Date = SLA Due Date
+
+result:
+
+Within SLA? = No
+
+
+==================================================
+E. PRIOTY
+==================================================
+
+IMPORTANT:
+
+Keep the spelling "Prioty" where referring to the existing report/template.
+
+Inputs:
+
+IBS
+Business Function / Mapped Business Function
+CJ or IF
+Final Severity Rating
+
+
+First:
+
+Are required Priority inputs present?
+
+If NO:
+    Prioty = blank
+
+If YES:
+    continue
+
+
+Then apply Severity eligibility.
+
+Eligible:
+
+Critical
+High
+Medium ONLY when Mapped Business Function = PT
+
+Not eligible:
+
+Low
+Medium + IVS
+Medium + AVS
+Medium + CVE
+other noneligible severity
+
+If not eligible:
+
+Prioty = blank
+
+
+If eligible, evaluate in this EXACT ORDER:
+
+1. CJ or IF = IF-CJ
+   → P1
+
+2. CJ or IF = IF
+   AND IBS = IBS
+   → P1
+
+3. CJ or IF = IF
+   AND IBS = Non-IBS
+   AND Mapped Business Function = IVS or AVS
+   → P2
+
+4. CJ or IF = IF
+   AND IBS = Non-IBS
+   AND Mapped Business Function = CVE or PT
+   → P1
+
+5. CJ or IF = CJ
+   → P2
+
+6. CJ or IF = Others
+   AND IBS = IBS
+   → P2
+
+7. CJ or IF = Others
+   AND IBS = Non-IBS
+   AND Mapped Business Function = IVS or AVS
+   → P4
+
+8. CJ or IF = Others
+   AND IBS = Non-IBS
+   AND Mapped Business Function = CVE or PT
+   → P3
+
+If the record is eligible but inputs are present and cannot be mapped/matched:
+
+Prioty = Check Input
+
+
+Include a simplified Prioty matrix in or alongside the diagram:
+
+Condition                IVS   AVS   CVE   PT
+
+IF-CJ                    P1    P1    P1    P1
+IF + IBS                 P1    P1    P1    P1
+IF + Non-IBS             P2    P2    P1    P1
+CJ                       P2    P2    P2    P2
+Others + IBS             P2    P2    P2    P2
+Others + Non-IBS         P4    P4    P3    P3
+
+
+==================================================
+F. PLANNED REMEDIATION
+==================================================
+
+Input:
+
+Remediation Planned Date
+
+Flow:
+
+Remediation Planned Date
+        ↓
+Is date blank?
+   ├── YES
+   │      ↓
+   │   Remediation Plan = Unplanned
+   │
+   └── NO
+          ↓
+      Derive Planned Remediation Quarter
+          ↓
+      Derive Planned Remediation Month
+
+
+Quarter:
+
+Jan-Mar → Q1
+Apr-Jun → Q2
+Jul-Sep → Q3
+Oct-Dec → Q4
+
+Quarter display:
+
+YYYY-Q#
+
+Example:
+
+2026-Q4
+
+
+Month display:
+
+MMM-YYYY
+
+Example:
+
+Oct-2026
+
+
+Reporting hierarchy:
+
+Quarter
+    ↓
+Month
+
+
+Example:
+
+2026-Q4
+ ├── Oct-2026
+ ├── Nov-2026
+ └── Dec-2026
+
+
+Unplanned has no Month child.
+
+
+==================================================
+G. CURRENTLY UNCONFIRMED BUSINESS RULES
+==================================================
+
+Do NOT invent rules for:
+
+Group Apps
+Risk Assesment Require
+Planned Remediation (Week)
+Plan Date Expired
+Average Time To Remediate
+Aging calculations
+QTD
+MTD
+Due In Months
+Closed By Year / Closed By Year-month
+
+If these need to appear in the diagram, show them as:
+
+Future Rule / TODO
+
+Do NOT connect them to invented calculations.
+
+
+==================================================
+FLOWCHART 3 — RAW DATA TO REPORTING SUMMARY
+==================================================
+
+Title:
+
+End-to-End VM Reporting Data Flow
+
+Create a simpler architecture/data-flow diagram:
+
+Raw Vulnerability Dataset
+        +
+Reference / Mapping Data
+        ↓
+Dataset Validation
+        ↓
+VM Business Rule Processing
+        ↓
+Processed Reporting Dataset
+        ↓
+PostgreSQL Reporting Storage
+        ↓
+Reporting / Aggregation Service
+        ↓
+Apply User Selected Filters
+        ↓
+Group by Report Dimensions
+        ↓
+DISTINCT COUNT of Unique Reference ID
+        ↓
+KPI Cards + Charts + Summary Table
+        ↓
+Drill Down to Underlying Records
+
+
+==================================================
+REPORTING / SUMMARY BUSINESS RULES
+==================================================
+
+The reporting metric is:
+
+Number of Vulnerability
+=
+DISTINCT COUNT of Unique Reference ID
+
+This rule applies to:
+
+- KPI cards
+- chart values
+- Pivot-style table cells
+- row totals
+- column totals
+- Grand Total
+
+Each total must be calculated independently using distinct IDs.
+
+Do not simply add child values to create Grand Total.
+
+
+==================================================
+REPORT VIEW 1 — VULNERABILITY PRIORITIZATION
+==================================================
+
+Filters:
+
+Remediation Domain Grouping
+ICS Hierarchy
+Within SLA?
+Remediation Status
+
+Rows:
+
+Cluster
+    → ICS Group Country
+
+Columns:
+
+Prioty
+
+Values:
+
+Distinct Count of Unique Reference ID
+
+Displayed as:
+
+Number of Vulnerability
+
+Output structure:
+
+Cluster / Country
+| P1
+| P2
+| P3
+| P4
+| Grand Total
+
+Records with blank Prioty are hidden by default.
+
+The user can optionally include them.
+
+
+==================================================
+REPORT VIEW 2 — REMEDIATION RATE
+==================================================
+
+Filters:
+
+Remediation Domain Grouping
+ICS Hierarchy
+Business Function
+Within SLA?
+Remediation Status
+SLA Due Date
+Final Severity Rating
+
+Rows:
+
+Cluster
+    → ICS Group Country
+
+Columns:
+
+Met or Breached SLA
+
+Categories currently come directly from the source data:
+
+Met SLA
+Breached SLA
+Exception
+Open
+Overdue
+
+Values:
+
+Distinct Count of Unique Reference ID
+
+
+IMPORTANT:
+
+Do NOT show a calculation flow for deriving Met or Breached SLA because that
+business rule has NOT been confirmed.
+
+Treat Met or Breached SLA as a source field for now.
+
+
+==================================================
+REPORT VIEW 3 — REMEDIATION PLAN
+==================================================
+
+Filters:
+
+Business Function
+Remediation Domain Grouping
+Remediation Status
+ICS Hierarchy
+Within SLA?
+Prioty
+
+Rows:
+
+Cluster
+    → ICS Group Country
+
+Columns:
+
+Planned Remediation Quarter
+    → Planned Remediation Month
+
+Values:
+
+Distinct Count of Unique Reference ID
+
+Default display:
+
+Quarter
+
+Expandable:
+
+Quarter
+    → Month
+
+Also include:
+
+Unplanned
+
+as a separate category.
+
+
+==================================================
+FINAL VISUAL REQUIREMENTS
+==================================================
+
+Create the diagrams so that they are suitable for a university Final Year
+Project / Internship report.
+
+Avoid one giant unreadable diagram.
+
+Create THREE separate diagrams:
+
+Figure 1:
+System Workflow
+
+Figure 2:
+VM Report Business Rule Processing
+
+Figure 3:
+Raw Data to Reporting Summary / Dashboard
+
+Use short labels inside diagram boxes.
+
+Put detailed explanations outside the diagram if necessary.
+
+The diagrams should remain understandable when inserted into an A4 report.
+
+Use consistent terminology with the application:
+
+Raw Data
+Validation
+Processing
+Cluster
+IBS
+Mapped Business Function
+Within SLA?
+Prioty
+Remediation Plan
+Processing Run
+Reporting Summary
+Dashboard
+Drill-down
+
+Do not add rules that are not specified above.
