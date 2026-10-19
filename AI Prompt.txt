@@ -1,1 +1,38 @@
-Unique Reference ID	Remediation Status	Finding Name	Remediation Planned Date	Remediation Plan	CI ID	MI Type	CI Name	Finding ID	URL Affected	Mobile Binary	JIRA Ticket	Final Severity Rating	SLA Start Date	SLA Due Date	Remediation Close Date	Remediated within SLA Yes/No	Remediated Ageing Week	Reason for Delayed for Retest 	ELs Technical Assessment 	Triaging Start Date  	Triaging End Date	Plan Date Received On (Detailed Plans)    	Domain	Sub Domain	POC	Sub Domain Reassignment Accepted Date  	Sub Domain Reassignment Accepted By	Deployment Week	20- Jan - Baseline Plan Date	Status	Issues / Pending with	Other Remarks	Update / Action Log	Dev Deployment Status	Retest Readiness Date  	SPT Retest Status	SPT Ticket	Retest Scheduled Date	PROD Release Date	DTL	With In SLA	CISO MI Committed Plan	PROD CHG Number
+Week 4: 5 Oct – 9 Oct 2026
+Tuesday, 6 Oct 2026
+Had a project catch-up with Appaduria, Aravind Kumar and Kaushik1, Akshaya to discuss the direction of my internship project.
+Based on my follow-up the next day, the project idea was positively received, but I was asked to explore an alternative development approach instead of making it purely web-based.
+Was assigned to prepare business flow/business-rule documentation for the VM and CISO reporting processes.
+Continued working on the CISO MI weekly reporting workbook CISO MI - 2026-09-29 - Weekly Report.
+Wednesday, 7 Oct 2026
+Completed the VM report and uploaded it to SharePoint for Saw, Max Thean Hock to review before distribution.
+Worked on documenting the business rules for the VM reporting process and shared them with Saw, Max Thean Hock for checking.
+Continued translating the existing manual VM/CISO reporting workflow into clearer business rules for my internship project.
+Thursday, 8 Oct 2026
+Was asked by Saw, Max Thean Hock to update the CISO MI tracking using the latest WRB_CISO_MI_PT_2026_Tracker - 07 Oct.
+Updated/worked on WRB_CISO_MI_PT_2026_Tracker - 07 Oct, which contained CISO MI vulnerability summaries and reporting information.
+Received SPM live data from Chong, Connie Kok Lee for use in the reporting work.
+Worked on report summaries and clarified that the current output should focus on the summary without including the burndown section.
+Received an updated monthly dataset because the previous version did not contain code defects, and was asked to regenerate the report using the new data.
+Was invited to the WRB CISO VM Weekly Sync; this calendar result does not confirm actual attendance.
+Friday, 9 Oct 2026
+Continued preparing the updated VM Monthly Report using the revised source dataset.
+Completed and uploaded the latest VM Monthly Report to the team's SharePoint location for review.
+Followed up with Kaushik1, Akshaya regarding further discussion of my internship project and agreed to meet the following week in the office.
+Reviewed the September Market VM Report - Full Dataset ROWG Monthly - 30 Sept 2026.xlsx, which included SLA, backlog hygiene and vulnerability-remediation reporting.
+Week 5: 12 Oct – 16 Oct 2026
+Monday, 12 Oct 2026
+Attended Invitation | Ask Me Anything with Cezary and Firuza; a subsequent email explicitly thanked me for attending.
+The session provided an opportunity to hear about the ICS/FCSO leadership transition and hear directly from leadership.
+Expressed interest in volunteering for the GBS MY Tech Fixathon. The available volunteer positions were already filled, and I was subsequently asked whether I would be interested in becoming an emcee for the event.
+Tuesday, 13 Oct 2026
+Participated in Internship Induction Week Oct 2026 - Day 2. The calendar shows the induction scheduled from 9:00 AM to 6:00 PM.
+The Day 2 agenda included interpersonal skills, a building tour, EPF, an overview of the organisation, diversity and inclusion, personal branding, effective communication skills and completion of mandatory e-learning.
+Wednesday, 14 Oct 2026
+Participated in Internship Induction Week Oct 2026 - Day 3, scheduled from 9:00 AM to 6:00 PM. The search result confirms the calendar event but does not provide the Day 3 programme details.
+Was also invited to CyberFEST Track 2: Data Security on AWS - "Back to Basics"; the calendar result does not confirm attendance.
+The Weekly Security Remediation Oversight Working Group (ROWG) Meeting covered areas including vulnerability remediation status, patching, automation, reporting, ownership management and certificate compliance. The retrieved record does not confirm my attendance, so I would not claim this as an attended session in the logbook.
+Thursday, 15 Oct 2026
+Participated in Internship Induction Week Oct 2026 - Day 4, scheduled from 9:00 AM to 4:15 PM. The retrieved event does not include the detailed Day 4 agenda.
+Was invited to the regular WRB CISO VM Weekly Sync, but the retrieved calendar record does not confirm attendance.
+Was also invited to the CyberFEST session AI-Powered Defense, AI-Powered Threats: What comes next?; again, the calendar result does not confirm attendance.
