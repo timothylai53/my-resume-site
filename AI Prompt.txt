@@ -1,5 +1,1898 @@
-Friday, 16 Oct 2026
-Joined the CyberFEST 2026 Standard Nerdz Global CTF Afterparty session.
-Learned about different approaches used to solve Capture the Flag (CTF) cybersecurity challenges.
-Followed technical discussions on challenge solutions, including AI/LLM-related security topics.
-Gained additional exposure to practical cybersecurity problem-solving through discussions with other participants.
+I need you to create one complete, professional technical handover document for my existing Vulnerability Management reporting process.
+
+The document must describe the complete workflow from start to finish, covering:
+
+1. Main VM / Summary reporting
+2. Remote Exp Medium reporting
+3. Medium - PT
+4. Medium - IVS
+5. Medium - CVE
+6. Medium - AVS
+7. Original/manual Excel formulas
+8. Final Power Query automation
+9. PivotTable configuration
+10. Monthly refresh procedures
+11. Validation and troubleshooting
+
+This documentation describes an EXISTING, WORKING and VALIDATED process.
+
+Do not redesign the workflow.
+Do not invent business rules.
+Do not change field names.
+Do not “improve” formulas if doing so changes the validated result.
+Do not omit formulas merely because Power Query has replaced them.
+
+Use the supplied Excel workbooks, formulas, notes and Power Query M code as the source of truth.
+
+If any information cannot be confirmed from the supplied material, write:
+
+[TO BE CONFIRMED]
+
+==================================================
+DOCUMENT TITLE
+==================================================
+
+Vulnerability Management Reporting Automation
+
+End-to-End Workflow, Business Rules, Excel Formulas, Power Query and PivotTable Documentation
+
+==================================================
+DOCUMENT PURPOSE
+==================================================
+
+Create a professional handover document that allows another analyst to:
+
+- understand the complete reporting workflow
+- identify all required files, sheets, tables and queries
+- understand the original manual process
+- understand the automated Power Query process
+- understand every key Excel calculation
+- maintain the Power Query M code
+- refresh the report for a new reporting month
+- validate the automated results
+- identify and fix common errors
+- understand the Summary report
+- understand the Remote Exp Medium report
+- understand the PT, IVS, CVE and AVS processes
+- understand how monthly historical snapshots are retained
+- understand which PivotTables use which data sources
+- understand known spelling and field-name dependencies
+
+The finished output must be ONE complete handover document, not separate disconnected notes.
+
+==================================================
+REQUIRED DOCUMENT STRUCTURE
+==================================================
+
+Create the following sections:
+
+1. Document Control
+2. Change Log
+3. Table of Contents
+4. Executive Summary
+5. Monthly Operator Quick Guide
+6. Solution Architecture
+7. Files, Workbooks, Worksheets, Tables and Queries
+8. Main VM Reporting Workflow
+9. Excel Formula Reference
+10. Power Query Business Rules
+11. Summary Report
+12. Medium Reporting Architecture
+13. Medium - PT
+14. Medium - IVS
+15. Medium - CVE
+16. Medium - AVS
+17. Remote Exp Medium
+18. PivotTable Configuration
+19. Monthly Refresh Procedure
+20. Validation Procedure
+21. Troubleshooting Guide
+22. Technical Maintenance Guide
+23. Workbook Organisation
+24. Appendices
+
+==================================================
+1. EXECUTIVE SUMMARY
+==================================================
+
+Explain that the automation replaces a largely manual Excel reporting process.
+
+The automated process is:
+
+Raw VM input
+    ↓
+Power Query data preparation
+    ↓
+IBS, Cluster, Priority and SLA calculations
+    ↓
+Main processed VM dataset
+    ↓
+Summary PivotTables
+    +
+Medium historical snapshot processing
+    ↓
+PT / IVS / CVE / AVS automated tables
+    ↓
+Remote Exp Medium PivotTables
+
+Main automated workbook:
+
+Master_VM_Report.xlsx
+
+Monthly raw input:
+
+Input\Raw_VM_Data.xlsx
+
+Expected raw-data worksheet:
+
+ROWG_Detailed Dataset - Monthly
+
+Main processed query:
+
+qryRawVM
+
+The intended monthly operation is:
+
+1. Back up the previous reporting workbook.
+2. Replace Raw_VM_Data.xlsx with the new month’s raw data.
+3. Open Master_VM_Report.xlsx.
+4. Refresh All.
+5. Validate query results.
+6. Refresh and validate PivotTables.
+7. Save the completed monthly report.
+
+==================================================
+2. MONTHLY OPERATOR QUICK GUIDE
+==================================================
+
+Add a short quick-start section near the beginning.
+
+Use this workflow:
+
+1. Make a backup of the previous validated Master_VM_Report.xlsx.
+
+2. Replace:
+
+Input\Raw_VM_Data.xlsx
+
+with the current reporting month’s raw VM file.
+
+3. Keep the input filename exactly:
+
+Raw_VM_Data.xlsx
+
+4. Confirm the raw-data worksheet remains:
+
+ROWG_Detailed Dataset - Monthly
+
+5. Confirm Report End Date represents the correct reporting period.
+
+6. Open Master_VM_Report.xlsx.
+
+7. Select:
+
+Data → Refresh All
+
+8. Check that all Power Query queries complete without errors.
+
+9. Validate qryRawVM:
+
+- IBS
+- Cluster
+- Prioty
+- Within SLA?
+
+10. Validate:
+
+- qryMediumPT
+- qryMediumIVS
+- qryMediumCVE
+- qryMediumAVS
+
+11. Confirm that the latest monthly snapshot fields were created.
+
+For September, for example:
+
+- Remediation Status (30 Sep)
+- Remediaiton Domain (30 Sep)
+- Planned Remediation (Month) (30 Sep)
+- Final Severity Rating (30 Sep)
+
+12. Refresh PivotTables.
+
+13. Validate the Summary report.
+
+14. Validate Remote Exp Medium for:
+
+- PT
+- CVE
+- IVS
+- AVS
+
+15. Save the validated report.
+
+==================================================
+3. SOLUTION ARCHITECTURE
+==================================================
+
+Create a clear SmartArt-friendly process flow.
+
+Use this structure:
+
+Raw_VM_Data.xlsx
+        ↓
+qryRawVM
+        ↓
+Data cleaning and enrichment
+        ↓
+IBS / Cluster / Prioty / Within SLA
+        ↓
+Main VM output table
+        ↓
+Summary PivotTables
+        +
+Medium historical queries
+        ↓
+qryMediumPT
+qryMediumIVS
+qryMediumCVE
+qryMediumAVS
+        ↓
+Automated Medium tables
+        ↓
+Remote Exp Medium PivotTables
+
+Clearly distinguish three layers:
+
+A. Manual Excel workflow
+B. Automated Power Query workflow
+C. PivotTable/reporting layer
+
+==================================================
+4. WORKBOOK, WORKSHEET, TABLE AND QUERY INVENTORY
+==================================================
+
+Create an inventory table with:
+
+- Item name
+- Item type
+- Purpose
+- Source
+- Output
+- Refresh behaviour
+- Visible or hidden
+- Dependencies
+
+Include at least:
+
+WORKBOOKS
+
+- Master_VM_Report.xlsx
+- Raw_VM_Data.xlsx
+- Validated/reference monthly report, if supplied
+
+VISIBLE USER-FACING WORKSHEETS
+
+- Summary
+- Remote Exp Medium
+- ROWG Monthly Data / qryRawVM output
+- Medium - PT
+- Medium - IVS
+- Medium - CVE
+- Medium - AVS
+
+HIDDEN TECHNICAL WORKSHEETS
+
+- Medium PT Automated
+- Medium IVS Automated
+- Medium CVE Automated
+- Medium AVS Automated
+
+AUTOMATED TABLES
+
+- tblMediumPT_Automated
+- tblMediumIVS_Automated
+- tblMediumCVE_Automated
+- tblMediumAVS_Automated
+
+QUERIES
+
+- qryRawVM
+- qryIBS
+- qryCluster
+- qryMediumPT_History
+- qryMediumPT
+- qryMediumIVS_History
+- qryMediumIVS
+- qryMediumCVE_History
+- qryMediumCVE
+- qryMediumAVS_History
+- qryMediumAVS
+
+Explain that History queries may remain Connection Only.
+
+Explain that hidden automated worksheets must not be deleted if PivotTables use the tables on those sheets as sources.
+
+==================================================
+5. MAIN VM REPORTING WORKFLOW
+==================================================
+
+Document the complete flow:
+
+Raw_VM_Data.xlsx
+    ↓
+ROWG_Detailed Dataset - Monthly
+    ↓
+qryRawVM
+    ↓
+CIID cleaning
+    ↓
+IBS lookup
+    ↓
+Cluster mapping
+    ↓
+Business Function mapping
+    ↓
+Prioty calculation
+    ↓
+Within SLA calculation
+    ↓
+Processed VM table
+    ↓
+Summary PivotTables
+
+Include the expected source filepath if present in the supplied code.
+
+Explain every query step in plain English.
+
+==================================================
+6. WITHIN SLA BUSINESS RULE
+==================================================
+
+Include the original/manual Excel formula:
+
+=IF(TRIM(H2)="","No SLA",IF(TRIM(CE2)="","No Report End Date",IFERROR(IF(DATEVALUE(TRIM(CE2))<DATEVALUE(TRIM(H2)),"Yes","No"),"Invalid Date")))
+
+Document the FINAL VALIDATED rule:
+
+SLA Due Date is blank
+→ No SLA
+
+Report End Date is blank
+→ No Report End Date
+
+Either date cannot be converted
+→ Invalid Date
+
+Report End Date < SLA Due Date
+→ Yes
+
+Report End Date >= SLA Due Date
+→ No
+
+IMPORTANT:
+
+Do not change the comparison from < to <=.
+
+During validation, a difference between < and <= changed the population included by the Within SLA PivotTable filter.
+
+Example:
+
+SLA Due Date = 31-Aug-2026
+Report End Date = 31-Aug-2026
+
+Validated result:
+
+No
+
+Explain the equivalent Power Query M implementation.
+
+==================================================
+7. IBS BUSINESS RULE
+==================================================
+
+IBS is derived and is not originally supplied by the raw VM dataset.
+
+Include the original/manual formula:
+
+=IF(TRIM(T2&"")="","",IF(COUNTIF(IBS!$A$2:$A$214091,T2)>0,"IBS","Non-IBS"))
+
+Document the rule:
+
+Raw VM CIID
+    ↓
+Search IBS reference CI ID
+    ↓
+Found → IBS
+Not found → Non-IBS
+Blank CIID → blank
+
+Explain that Power Query implements this through:
+
+- cleaning CIID
+- merging with qryIBS
+- identifying whether a match exists
+- returning IBS or Non-IBS
+
+Document how spaces, text conversion and hidden-character cleaning are handled.
+
+==================================================
+8. CLUSTER BUSINESS RULE
+==================================================
+
+IMPORTANT CORRECTION:
+
+Cluster is based on:
+
+ICS Group Country
+
+It is NOT based on ICS Hierarchy.
+
+Include the original/manual XLOOKUP formula if found in the supplied workbook.
+
+The known formula pattern is:
+
+=IF(TRIM(BL2&"")="","NA",XLOOKUP(TRIM(BL2&""),'Cluster Mapping'!$A$2:$A$36,'Cluster Mapping'!$B$2:$B$36,"Check Mapping",0))
+
+Verify actual columns and references from the supplied workbook before finalising.
+
+Document the rule:
+
+ICS Group Country is blank
+→ NA
+
+ICS Group Country found in Cluster Mapping
+→ Return mapped Cluster
+
+ICS Group Country not found
+→ Check Mapping
+
+Explain the equivalent qryCluster merge in Power Query.
+
+Do not duplicate or invent special conditions that are not present in the final validated M code.
+
+==================================================
+9. BUSINESS FUNCTION MAPPING
+==================================================
+
+Document the exact mapping:
+
+AVS
+→ AVS
+
+Any Business Function containing CSR
+→ IVS
+
+IVS
+→ IVS
+
+PT
+→ PT
+
+SPM
+→ CVE
+
+IMPORTANT:
+
+“Contains CSR” is a contains-text rule, not only an exact match.
+
+Explain how Excel uses SEARCH/ISNUMBER and how Power Query uses Text.Contains.
+
+==================================================
+10. PRIOTY BUSINESS RULE
+==================================================
+
+IMPORTANT:
+
+The workbook column is intentionally spelled:
+
+Prioty
+
+Do not automatically rename it to Priority because existing PivotTables may depend on the spelling Prioty.
+
+Required fields:
+
+- IBS
+- Business Function
+- CJ or IF
+- Final Severity Rating
+
+If any required field is blank:
+
+Return blank.
+
+SEVERITY ELIGIBILITY
+
+Critical
+→ Calculate Prioty
+
+High
+→ Calculate Prioty
+
+Medium + mapped Business Function PT
+→ Calculate Prioty
+
+Other Medium
+→ blank
+
+Other severity
+→ blank
+
+PRIOTY DECISION ORDER
+
+1. CJ or IF = IF-CJ
+   → P1
+
+2. CJ or IF = IF
+   AND IBS = IBS
+   → P1
+
+3. CJ or IF = IF
+   AND IBS = Non-IBS
+   AND mapped Business Function is IVS or AVS
+   → P2
+
+4. CJ or IF = IF
+   AND IBS = Non-IBS
+   AND mapped Business Function is CVE or PT
+   → P1
+
+5. CJ or IF = CJ
+   → P2
+
+6. CJ or IF = OTHERS
+   AND IBS = IBS
+   → P2
+
+7. CJ or IF = OTHERS
+   AND IBS = Non-IBS
+   AND mapped Business Function is IVS or AVS
+   → P4
+
+8. CJ or IF = OTHERS
+   AND IBS = Non-IBS
+   AND mapped Business Function is CVE or PT
+   → P3
+
+Anything else:
+
+Check Input
+
+Include the COMPLETE original Excel Prioty formula exactly as supplied or detected in the workbook.
+
+Known original formula:
+
+=IF(
+OR(V2="",AU2="",BB2="",AN2=""),
+"",
+IF(
+NOT(
+OR(
+UPPER(TRIM(AN2))="CRITICAL",
+UPPER(TRIM(AN2))="HIGH",
+AND(
+UPPER(TRIM(AN2))="MEDIUM",
+OR(
+UPPER(TRIM(AU2))="PT",
+XLOOKUP(
+UPPER(TRIM(AU2)),
+UPPER('Business Function Mapping'!$A$2:$A$6),
+'Business Function Mapping'!$B$2:$B$6,
+"",
+0
+)="PT"
+)
+)
+)
+),
+"",
+IFS(
+UPPER(TRIM(BB2))="IF-CJ","P1",
+AND(
+UPPER(TRIM(BB2))="IF",
+UPPER(TRIM(V2))="IBS"
+),"P1",
+AND(
+UPPER(TRIM(BB2))="IF",
+UPPER(TRIM(V2))="NON-IBS",
+OR(
+ISNUMBER(SEARCH("CSR",UPPER(AU2))),
+UPPER(TRIM(AU2))="IVS",
+UPPER(TRIM(AU2))="AVS"
+)
+),"P2",
+AND(
+UPPER(TRIM(BB2))="IF",
+UPPER(TRIM(V2))="NON-IBS",
+OR(
+UPPER(TRIM(AU2))="SPM",
+UPPER(TRIM(AU2))="PT"
+)
+),"P1",
+UPPER(TRIM(BB2))="CJ","P2",
+AND(
+UPPER(TRIM(BB2))="OTHERS",
+UPPER(TRIM(V2))="IBS"
+),"P2",
+AND(
+UPPER(TRIM(BB2))="OTHERS",
+UPPER(TRIM(V2))="NON-IBS",
+OR(
+ISNUMBER(SEARCH("CSR",UPPER(AU2))),
+UPPER(TRIM(AU2))="IVS",
+UPPER(TRIM(AU2))="AVS"
+)
+),"P4",
+AND(
+UPPER(TRIM(BB2))="OTHERS",
+UPPER(TRIM(V2))="NON-IBS",
+OR(
+UPPER(TRIM(AU2))="SPM",
+UPPER(TRIM(AU2))="PT"
+)
+),"P3",
+TRUE,"Check Input"
+)
+)
+)
+
+Verify the cell references against the supplied workbook.
+
+Explain the equivalent final qryRawVM M logic in plain English.
+
+==================================================
+11. EXCEL FORMULA DOCUMENTATION
+==================================================
+
+The handover document must include ALL relevant Excel formulas from the original/manual process.
+
+Do not document only Power Query M code.
+
+Inspect the supplied workbooks for formulas in:
+
+- Summary
+- Remote Exp Medium
+- Medium - PT
+- Medium - IVS
+- Medium - CVE
+- Medium - AVS
+- raw/monthly dataset sheets
+- mapping sheets
+- helper columns
+
+For every relevant Excel formula, document:
+
+1. Calculation name
+2. Purpose
+3. Worksheet
+4. Output column/cell
+5. Exact formula
+6. Input columns
+7. Lookup key
+8. Lookup source
+9. Expected output
+10. Plain-English explanation
+11. Blank/error handling
+12. Equivalent Power Query implementation, if automated
+13. Known dependencies or spelling requirements
+
+Include formulas involving:
+
+- XLOOKUP
+- VLOOKUP, if present
+- LET
+- IF
+- IFS
+- IFERROR
+- COUNTIF
+- COUNTIFS
+- SUMIF
+- SUMIFS
+- AND
+- OR
+- SEARCH
+- ISNUMBER
+- UPPER
+- TRIM
+- DATEVALUE
+- TEXT
+- Pivot-supporting calculations
+- remediation-rate calculations
+- residual calculations
+- monthly snapshot calculations
+- No Plan Date handling
+
+Do not invent formulas.
+
+If a formula cannot be confirmed, write:
+
+[TO BE CONFIRMED]
+
+==================================================
+12. MEDIUM REPORTING OVERVIEW
+==================================================
+
+Document the four Medium datasets:
+
+- Medium - PT
+- Medium - IVS
+- Medium - CVE
+- Medium - AVS
+
+Explain that these sheets contain historical monthly snapshots.
+
+Example historical fields:
+
+- Remediation Status (31 May)
+- Remediaiton Domain (31 May)
+- Planned Remediation (Month) (31 May)
+- Final Severity Rating (31 May)
+
+- Remediation Status (30 Jun)
+- Remediaiton Domain (30 Jun)
+- Planned Remediation (Month) (30 Jun)
+- Final Severity Rating (30 Jun)
+
+- Remediation Status (31 July)
+- Remediaiton Domain (31 July)
+- Planned Remediation (Month) (31 July)
+- Final Severity Rating (31 July)
+
+The current reporting month adds another four snapshot fields.
+
+For August:
+
+- Remediation Status (31 Aug)
+- Remediaiton Domain (31 Aug)
+- Planned Remediation (Month) (31 Aug)
+- Final Severity Rating (31 Aug)
+
+For September:
+
+- Remediation Status (30 Sep)
+- Remediaiton Domain (30 Sep)
+- Planned Remediation (Month) (30 Sep)
+- Final Severity Rating (30 Sep)
+
+IMPORTANT:
+
+Preserve the spelling:
+
+Remediaiton Domain
+
+if the existing reports and PivotTables depend on that spelling.
+
+Explain how Report End Date determines the newest snapshot label.
+
+==================================================
+13. MEDIUM MANUAL XLOOKUP PROCESS
+==================================================
+
+Document that the manual Medium process uses identifier-based lookups to retrieve current monthly values.
+
+Normally:
+
+History Unique Reference ID
+    ↓
+Lookup current VM Unique Reference ID
+    ↓
+Retrieve current value
+
+Values retrieved:
+
+- Remediation Status
+- Remediation Domain
+- Remediation Planned Date
+- Final Severity Rating
+
+Include the actual formulas found in the supplied Medium sheets.
+
+Example Planned Remediation formula:
+
+=LET(
+dateResult,
+XLOOKUP(
+$A2,
+'Full Dataset ROWG Weekly - 13 Sept.xlsx'!Table7[Unique Reference ID],
+'Full Dataset ROWG Weekly - 13 Sept.xlsx'!Table7[Remediation Planned Date],
+"NA",
+0
+),
+IF(
+OR(
+dateResult="",
+UPPER(TRIM(dateResult&""))="NA",
+UPPER(TRIM(dateResult&""))="N/A"
+),
+"NA",
+IFERROR(
+TEXT(
+IF(
+ISNUMBER(dateResult),
+dateResult,
+DATEVALUE(TRIM(dateResult))
+),
+"mmm-yyyy"
+),
+dateResult
+)
+)
+)
+
+Another known version:
+
+=LET(
+dateResult,
+XLOOKUP(
+$A3,
+'ROWG_Detailed Dataset - Monthly'!A:A,
+'ROWG_Detailed Dataset - Monthly'!AL:AL,
+"NA",
+0
+),
+IF(
+OR(
+dateResult="",
+UPPER(TRIM(dateResult&""))="NA",
+UPPER(TRIM(dateResult&""))="N/A"
+),
+"NA",
+IFERROR(
+TEXT(
+IF(
+ISNUMBER(dateResult),
+dateResult,
+DATEVALUE(TRIM(dateResult))
+),
+"mmm-yyyy"
+),
+dateResult
+)
+)
+)
+
+Explain this formula step-by-step:
+
+1. Match the record identifier.
+2. Retrieve Remediation Planned Date.
+3. Check for blank, NA or N/A.
+4. Convert Excel serial dates or text dates.
+5. Return the value in MMM-yyyy format.
+6. Return the source value if date conversion fails.
+
+Example:
+
+31-Aug-2026
+→ Aug-2026
+
+FINAL VALIDATED REPORTING TREATMENT:
+
+Blank planned remediation date
+→ No Plan Date
+
+Document where No Plan Date is used because it affects Remote Exp Medium PivotTable groupings and totals.
+
+==================================================
+14. MEDIUM POWER QUERY ARCHITECTURE
+==================================================
+
+Document this architecture:
+
+qryMediumPT_History
+    ↓
+qryMediumPT
+
+qryMediumIVS_History
+    ↓
+qryMediumIVS
+
+qryMediumCVE_History
+    ↓
+qryMediumCVE
+
+qryMediumAVS_History
+    ↓
+qryMediumAVS
+
+Explain:
+
+- History queries read the existing historical Medium tables.
+- History queries may be Connection Only.
+- Final queries merge the current qryRawVM values into the historical datasets.
+- Final queries create the newest reporting-month fields.
+- Output queries load into automated Excel tables.
+- Remote Exp Medium PivotTables use the automated tables.
+
+==================================================
+15. MEDIUM - PT
+==================================================
+
+Document:
+
+History query:
+
+qryMediumPT_History
+
+Final query:
+
+qryMediumPT
+
+Normal matching key:
+
+Unique Reference ID
+
+Current data source:
+
+qryRawVM
+
+Current fields retrieved:
+
+- Remediation Status
+- Remediation Domain
+- Remediation Planned Date
+- Final Severity Rating
+- Report End Date
+
+Explain how the current values are merged into the historical PT table.
+
+Explain how the latest reporting date generates the newest column names.
+
+Explain how Remediation Planned Date is converted to MMM-yyyy.
+
+Explain No Plan Date handling.
+
+Insert the final actual M code from the supplied query.
+
+If the actual final M code cannot be extracted, insert:
+
+[PASTE FINAL qryMediumPT M CODE HERE]
+
+==================================================
+16. MEDIUM - IVS
+==================================================
+
+Document:
+
+History query:
+
+qryMediumIVS_History
+
+Final query:
+
+qryMediumIVS
+
+Matching key:
+
+Unique Reference ID
+
+Current IVS population:
+
+Business Function = IVS
+
+OR
+
+Business Function contains CSR
+
+Explain that CSR is treated as IVS for this report.
+
+Current fields retrieved:
+
+- Remediation Status
+- Remediation Domain
+- Remediation Planned Date
+- Final Severity Rating
+- Report End Date
+
+Explain monthly column generation and No Plan Date handling.
+
+Insert the final actual qryMediumIVS M code.
+
+If unavailable, insert:
+
+[PASTE FINAL qryMediumIVS M CODE HERE]
+
+==================================================
+17. MEDIUM - AVS
+==================================================
+
+Document:
+
+History query:
+
+qryMediumAVS_History
+
+Final query:
+
+qryMediumAVS
+
+Matching key:
+
+Unique Reference ID
+
+Current AVS population:
+
+Business Function = AVS
+
+Explain that historical Excel tables may contain formula errors.
+
+Explain the implemented error-safe process:
+
+- imported Excel errors are replaced with null where appropriate
+- identifier cleaning uses safe conversion
+- planned-date conversion uses try/otherwise
+- final remaining errors are replaced safely
+
+Do not imply that null and No Plan Date are the same unless the final query explicitly converts them.
+
+Insert the final error-safe qryMediumAVS M code.
+
+If unavailable, insert:
+
+[PASTE FINAL qryMediumAVS M CODE HERE]
+
+==================================================
+18. MEDIUM - CVE
+==================================================
+
+Document that Medium CVE corresponds to:
+
+Business Function = SPM
+
+History query:
+
+qryMediumCVE_History
+
+Final query:
+
+qryMediumCVE
+
+IMPORTANT SPECIAL MATCHING RULE:
+
+Medium CVE history key:
+
+Unique ID (SPM+Hostname)
+
+Current qryRawVM key:
+
+Unique Reference ID
+
+Merge relationship:
+
+History[Unique ID (SPM+Hostname)]
+    ↓
+Current[Unique Reference ID]
+
+Explain why CVE uses differently named identifier fields.
+
+Do not assume that differently named fields always contain the same format. State that identifier formatting must be validated.
+
+Document that historical Planned Remediation Month columns may contain:
+
+- month text
+- blanks
+- NA
+- formula-derived values
+- Excel errors
+
+Historical month fields should be treated as text where required.
+
+Document the error-safe history process:
+
+- convert problematic Planned Remediation Month fields to text
+- replace imported formula/type errors with null
+- keep qryMediumCVE_History as Connection Only where appropriate
+
+Insert:
+
+- final qryMediumCVE_History M code
+- final qryMediumCVE M code
+
+If unavailable, insert:
+
+[PASTE FINAL qryMediumCVE_History M CODE HERE]
+
+[PASTE FINAL qryMediumCVE M CODE HERE]
+
+==================================================
+19. AUTOMATED MEDIUM OUTPUT TABLES
+==================================================
+
+Document these table sources:
+
+PT
+→ tblMediumPT_Automated
+
+IVS
+→ tblMediumIVS_Automated
+
+CVE
+→ tblMediumCVE_Automated
+
+AVS
+→ tblMediumAVS_Automated
+
+Explain that Excel Table names cannot contain spaces.
+
+Explain that PivotTables should use the Excel Table name or the table-backed Pivot cache, not an unstable fixed cell range.
+
+Explain that automated output worksheets may be hidden but must not be deleted if the PivotTables depend on them.
+
+==================================================
+20. SUMMARY REPORT
+==================================================
+
+Document:
+
+qryRawVM
+    ↓
+Summary PivotTables
+    ↓
+Summary report
+
+Document relevant Pivot fields, including:
+
+- Cluster
+- Prioty
+- Within SLA?
+- Unique Reference ID count
+- other supplied report filters
+
+Document the important validated checks:
+
+- P1
+- P2
+- P3
+- P4
+- Grand Total
+- North Asia P4
+
+Explain the previous troubleshooting case:
+
+The Priority calculation was correct, but the Pivot result differed because the Within SLA calculation/filter treated equal dates differently.
+
+Validated rule:
+
+Report End Date < SLA Due Date
+→ Yes
+
+Report End Date >= SLA Due Date
+→ No
+
+Explain that correct row-level calculations can still produce different Pivot results if Pivot filters are not identical.
+
+==================================================
+21. REMOTE EXP MEDIUM REPORT
+==================================================
+
+Document the Remote Exp Medium report sections:
+
+- PT
+- CVE
+- IVS
+- AVS
+
+Document the relevant reporting areas found in the workbook, including where applicable:
+
+- Remediation Scope
+- Remediation Progress
+- Residual
+- Planned Remediation
+- Plan Expired
+- Remediation Rate
+- Planned Remediation Month
+- No Plan Date
+
+Do not invent area names that are not present in the supplied workbook.
+
+Document the PivotTable sources:
+
+PT
+→ tblMediumPT_Automated
+
+IVS
+→ tblMediumIVS_Automated
+
+CVE
+→ tblMediumCVE_Automated
+
+AVS
+→ tblMediumAVS_Automated
+
+Document that Remote Exp Medium PivotTables use the newest monthly fields, such as:
+
+- Remediation Status (31 Aug)
+- Remediaiton Domain (31 Aug)
+- Planned Remediation (Month) (31 Aug)
+- Final Severity Rating (31 Aug)
+
+In September, these change to the relevant 30 Sep fields where generated by the final query.
+
+Explain the previously validated issue:
+
+The valid report treated blank planned remediation dates as:
+
+No Plan Date
+
+This affected Pivot categories and reported results.
+
+==================================================
+22. PIVOTTABLE DOCUMENTATION
+==================================================
+
+For every important PivotTable, document:
+
+- PivotTable name, if available
+- Worksheet
+- Source table
+- Rows
+- Columns
+- Values
+- Report filters
+- Selected filter items
+- Calculated formulas beside the Pivot
+- Refresh behaviour
+- Show items with no data configuration
+- Known dependencies
+
+IMPORTANT:
+
+Do not document only “Multiple Items.”
+
+Open or inspect the Pivot filter and document the actual selected items when possible.
+
+Include the following known troubleshooting cases:
+
+A. Open category disappears
+
+Possible cause:
+
+The source currently has no matching Open records, or the Pivot hides items without data.
+
+Check:
+
+Field Settings → Layout & Print → Show items with no data
+
+Only document this as the actual configuration if verified from the supplied workbook.
+
+B. Pivot result differs after source change
+
+Check:
+
+- source table
+- fields
+- filter selections
+- newest monthly fields
+- Pivot cache refresh
+- item names
+- spelling differences
+- No Plan Date handling
+
+C. Existing Pivot expects:
+
+Prioty
+
+Do not rename the source field to Priority unless all Pivot dependencies are intentionally updated.
+
+==================================================
+23. REMEDIATION RATE AND OTHER REPORT FORMULAS
+==================================================
+
+Inspect the Summary and Remote Exp Medium sheets for formulas outside the PivotTables.
+
+Document any formulas for:
+
+- Remediation Rate Within SLA
+- Remediation Rate Within Month
+- residual reporting
+- planned remediation
+- scope totals
+- progress totals
+- expired plans
+- No Plan Date
+- blank/error handling
+- division-by-zero handling
+
+For every rate formula:
+
+- include the exact formula
+- identify numerator
+- identify denominator
+- explain included categories
+- explain excluded categories
+- explain blank or zero handling
+- identify whether IFERROR is used
+- explain the expected percentage result
+
+Do not invent or reverse-engineer a formula merely from a displayed percentage.
+
+If the exact formula cannot be confirmed, write:
+
+[TO BE CONFIRMED]
+
+==================================================
+24. COMPLETE MONTHLY REFRESH CHECKLIST
+==================================================
+
+Create a printable monthly checklist.
+
+Use the following structure:
+
+PRE-REFRESH
+
+☐ Back up the previous validated Master_VM_Report.xlsx.
+
+☐ Obtain the new monthly raw VM dataset.
+
+☐ Rename or save it as Raw_VM_Data.xlsx.
+
+☐ Place it in the Input folder.
+
+☐ Confirm the source worksheet is ROWG_Detailed Dataset - Monthly.
+
+☐ Confirm Report End Date represents the intended reporting month.
+
+REFRESH
+
+☐ Open Master_VM_Report.xlsx.
+
+☐ Select Data → Refresh All.
+
+☐ Confirm all query refreshes finish.
+
+☐ Check qryRawVM for errors.
+
+☐ Check qryMediumPT for errors.
+
+☐ Check qryMediumIVS for errors.
+
+☐ Check qryMediumCVE_History for errors.
+
+☐ Check qryMediumCVE for errors.
+
+☐ Check qryMediumAVS for errors.
+
+MAIN VM VALIDATION
+
+☐ Check IBS.
+
+☐ Check Cluster.
+
+☐ Check Prioty.
+
+☐ Check Within SLA?.
+
+☐ Confirm equal Report End Date and SLA Due Date returns No.
+
+☐ Check P1 total.
+
+☐ Check P2 total.
+
+☐ Check P3 total.
+
+☐ Check P4 total.
+
+☐ Check Grand Total.
+
+☐ Check North Asia P4.
+
+MEDIUM VALIDATION
+
+☐ Confirm newest monthly snapshot columns were generated.
+
+☐ Check PT output.
+
+☐ Check IVS output.
+
+☐ Check CVE output.
+
+☐ Check AVS output.
+
+☐ Check planned months use MMM-yyyy.
+
+☐ Check blank planned dates use No Plan Date where required.
+
+REMOTE EXP MEDIUM VALIDATION
+
+☐ Refresh PT PivotTables.
+
+☐ Refresh IVS PivotTables.
+
+☐ Refresh CVE PivotTables.
+
+☐ Refresh AVS PivotTables.
+
+☐ Check Remediation Scope.
+
+☐ Check Remediation Progress.
+
+☐ Check Residual.
+
+☐ Check remediation rates.
+
+☐ Check planned remediation categories.
+
+☐ Check No Plan Date.
+
+☐ Check newest Remediation Status filter.
+
+☐ Check newest Remediaiton Domain filter.
+
+☐ Check newest Planned Remediation Month filter.
+
+FINALISATION
+
+☐ Confirm no visible query errors.
+
+☐ Confirm Pivot filters match the validated reporting logic.
+
+☐ Save the completed monthly workbook.
+
+☐ Retain the previous month’s validated backup.
+
+==================================================
+25. VALIDATION METHODOLOGY
+==================================================
+
+Explain that the automated workbook must be validated against a known correct/manual result.
+
+Do not force totals to match by changing business rules without first tracing the differences.
+
+Use this sequence:
+
+1. Identify the mismatching report/Pivot total.
+2. Drill down to the contributing records.
+3. Compare record identifiers.
+4. Check whether records are:
+   - missing
+   - duplicated
+   - assigned a different calculated value
+   - excluded by a filter
+5. Compare input fields.
+6. Compare Power Query calculated fields.
+7. Compare output tables.
+8. Compare Pivot sources.
+9. Compare Pivot filters.
+10. Confirm final report totals.
+
+Use:
+
+Unique Reference ID
+
+for normal PT/IVS/AVS/main VM tracing.
+
+Use the relevant CVE identifier relationship for CVE:
+
+Unique ID (SPM+Hostname)
+versus
+Unique Reference ID
+
+Document the previous successful troubleshooting example:
+
+- A North Asia P4 difference initially appeared to be a Priority issue.
+- The tested row had the correct P4 value.
+- The row-level Priority logic was correct.
+- The difference appeared when Within SLA was filtered.
+- Equal SLA Due Date and Report End Date had been classified differently.
+- Aligning the SLA rule with the validated report corrected the result.
+
+==================================================
+26. TROUBLESHOOTING GUIDE
+==================================================
+
+Create a detailed troubleshooting table.
+
+Include at least the following:
+
+PROBLEM:
+Priority/Prioty totals differ
+
+CHECK:
+
+- IBS
+- Business Function
+- CJ or IF
+- Final Severity Rating
+- severity eligibility
+- required blanks
+- mapped Business Function
+- Pivot filters
+
+PROBLEM:
+North Asia P4 differs
+
+CHECK:
+
+- row-level Prioty
+- Within SLA?
+- Report End Date
+- SLA Due Date
+- Pivot Within SLA filter
+- Pivot source
+- Pivot refresh status
+
+PROBLEM:
+Record exists in qryRawVM but not in report
+
+CHECK:
+
+- Cluster
+- Prioty
+- report filters
+- hidden Pivot selections
+- output-table source
+- newest monthly field filter
+- Pivot cache refresh
+
+PROBLEM:
+Open column disappears
+
+CHECK:
+
+- whether Open exists in the source field
+- Show items with no data
+- Pivot source
+- other active filters
+
+PROBLEM:
+#DIV/0! appears
+
+CHECK:
+
+- missing Pivot category
+- denominator equals zero
+- shifted cell reference
+- missing Open column
+- IFERROR logic
+
+Do not recommend IFERROR as a substitute for correcting a wrong Pivot source or missing category.
+
+PROBLEM:
+Medium query has Power Query errors
+
+CHECK:
+
+- imported Excel formula errors
+- incorrect data type
+- mixed text/date values
+- NA or N/A
+- invalid date conversion
+- missing key
+- duplicate key
+- historical table errors
+
+PROBLEM:
+qryMediumCVE_History errors
+
+CHECK:
+
+- Planned Remediation Month forced to date
+- Excel error values
+- fields containing text/NA
+- historical month columns
+
+Recommended handling where implemented:
+
+- treat Planned Remediation Month as text
+- replace imported errors with null
+- preserve original valid values
+
+PROBLEM:
+Remote Exp Medium totals differ
+
+CHECK:
+
+- source table
+- newest Remediation Status field
+- selected status items
+- newest Remediaiton Domain field
+- Planned Remediation Month
+- No Plan Date
+- blank handling
+- Pivot filters
+- Pivot refresh
+
+PROBLEM:
+Pivot field is missing
+
+CHECK:
+
+- exact spelling
+- source column name
+- newest dynamic month name
+- source table
+- whether field was renamed
+- Prioty versus Priority
+- Remediaiton versus Remediation
+
+PROBLEM:
+Merge creates duplicate rows
+
+CHECK:
+
+- duplicated identifier in lookup/current table
+- whether first-match logic is used
+- whether Table.Distinct or Table.Group is applied
+- relationship between historical and current identifiers
+
+==================================================
+27. TECHNICAL MAINTENANCE GUIDE
+==================================================
+
+Explain how to maintain:
+
+- source file path
+- worksheet name
+- table names
+- query dependencies
+- date conversion
+- identifier cleaning
+- mapping queries
+- monthly dynamic column names
+- connection-only queries
+- automated output tables
+- hidden worksheets
+- Pivot source tables
+- Pivot filters
+
+Explain that changes to these names may break dependencies:
+
+- qryRawVM
+- qryMediumPT_History
+- qryMediumPT
+- qryMediumIVS_History
+- qryMediumIVS
+- qryMediumCVE_History
+- qryMediumCVE
+- qryMediumAVS_History
+- qryMediumAVS
+- tblMediumPT_Automated
+- tblMediumIVS_Automated
+- tblMediumCVE_Automated
+- tblMediumAVS_Automated
+- Prioty
+- Remediaiton Domain
+- Unique ID (SPM+Hostname)
+- Unique Reference ID
+
+==================================================
+28. FORMULA REFERENCE TABLE
+==================================================
+
+Create a Formula Reference table with these columns:
+
+- Calculation
+- Worksheet
+- Output column
+- Formula type
+- Exact formula
+- Lookup key
+- Lookup source
+- Purpose
+- Expected output
+- Blank/error handling
+- Power Query replacement
+- Notes/dependencies
+
+Include:
+
+- Within SLA
+- IBS
+- Cluster
+- Prioty
+- Business Function mapping
+- Medium Remediation Status lookup
+- Medium Remediation Domain lookup
+- Medium Planned Remediation Month lookup
+- Medium Final Severity Rating lookup
+- No Plan Date
+- remediation-rate formulas
+- other relevant report formulas
+
+==================================================
+29. POWER QUERY REFERENCE TABLE
+==================================================
+
+Create a Query Reference table with:
+
+- Query name
+- Source
+- Query type
+- Purpose
+- Key fields
+- Filters
+- Merge target
+- Output
+- Load destination
+- Dependencies
+- Error handling
+
+Include all supplied final queries.
+
+==================================================
+30. FINAL M CODE APPENDICES
+==================================================
+
+Create the following appendices:
+
+Appendix A
+Final qryRawVM M Code
+
+Appendix B
+Final qryMediumPT_History M Code
+
+Appendix C
+Final qryMediumPT M Code
+
+Appendix D
+Final qryMediumIVS_History M Code
+
+Appendix E
+Final qryMediumIVS M Code
+
+Appendix F
+Final qryMediumAVS_History M Code
+
+Appendix G
+Final qryMediumAVS M Code
+
+Appendix H
+Final qryMediumCVE_History M Code
+
+Appendix I
+Final qryMediumCVE M Code
+
+Use the actual supplied M code where available.
+
+Do not reconstruct or invent missing M code.
+
+If unavailable, insert an explicit placeholder such as:
+
+[FINAL qryRawVM M CODE TO BE INSERTED]
+
+==================================================
+31. EXCEL FORMULA APPENDIX
+==================================================
+
+Create:
+
+Appendix J
+Original Excel Formulas
+
+Organise formulas by:
+
+- Main VM
+- Summary
+- Medium - PT
+- Medium - IVS
+- Medium - CVE
+- Medium - AVS
+- Remote Exp Medium
+- Pivot-supporting calculations
+
+For every formula, retain the exact original formula and provide a plain-English explanation.
+
+==================================================
+32. CHANGE LOG
+==================================================
+
+Create a change-log template with:
+
+- Version
+- Date
+- Author
+- Change description
+- Reviewed by
+- Approval/status
+
+Where actual information is unavailable, leave the cells blank or mark:
+
+[TO BE CONFIRMED]
+
+==================================================
+WRITING AND FORMATTING REQUIREMENTS
+==================================================
+
+- Write in professional technical-handover style.
+- Use clear numbered headings.
+- Include a Table of Contents.
+- Include an Executive Summary.
+- Include a short Monthly Operator Quick Guide.
+- Include a detailed Technical Maintenance Guide.
+- Use tables for business rules and reference lists.
+- Use code blocks for Excel formulas and M code.
+- Do not put long code inside normal document tables.
+- Explain formulas in plain English after showing them.
+- Clearly distinguish manual Excel logic from Power Query automation.
+- Clearly distinguish Power Query output from PivotTable reporting.
+- Preserve exact field names.
+- Preserve known misspellings when they are workbook dependencies.
+- Use examples from the supplied workbooks where possible.
+- Do not invent company policies, governance rules or approvals.
+- Do not fabricate formulas, filters, mappings or field names.
+- Mark unconfirmed information as [TO BE CONFIRMED].
+- Do not remove historical details merely to shorten the document.
+- Make the document detailed enough for another analyst to operate and maintain the process.
+- Add page breaks between major sections where appropriate.
+- Add figure/table captions.
+- Add a glossary for key terms such as CIID, IBS, VM, PT, IVS, CVE, AVS, SLA and SPM when definitions are available.
+- If a term’s definition is not confirmed, mark it [TO BE CONFIRMED].
+
+==================================================
+FINAL INSTRUCTION
+==================================================
+
+Use the supplied workbook, formulas, notes and final Power Query M codes as the source of truth.
+
+The document must include:
+
+1. Complete VM workflow
+2. Complete Remote Exp Medium workflow
+3. Original/manual Excel formulas
+4. Final Power Query M code
+5. PivotTable sources, fields and filters
+6. Monthly refresh procedure
+7. Validation checklist
+8. Troubleshooting guidance
+9. Workbook, sheet, table and query structure
+10. Formula Reference appendix
+11. Query Reference appendix
+12. Change Log
+13. Operator Quick Guide
+14. Technical Maintenance Guide
+
+Inspect all supplied worksheets for formulas, including:
+
+- Summary
+- Remote Exp Medium
+- Medium - PT
+- Medium - IVS
+- Medium - CVE
+- Medium - AVS
+
+Document relevant formulas such as:
+
+- XLOOKUP
+- VLOOKUP, if present
+- LET
+- IF
+- IFS
+- IFERROR
+- COUNTIF
+- COUNTIFS
+- SUMIF
+- SUMIFS
+- SEARCH
+- ISNUMBER
+- DATEVALUE
+- TEXT
+- Pivot-supporting formulas
+- remediation-rate formulas
+- monthly snapshot formulas
+- No Plan Date handling
+
+Do not invent any missing formula, field name, source table, filter selection, mapping or business rule.
+
+If something cannot be confirmed, write:
+
+[TO BE CONFIRMED]
+
+Preserve exact workbook dependencies and known misspellings, including:
+
+- Prioty
+- Remediaiton Domain
+
+Generate one complete, professional handover document rather than separate disconnected notes.
+
+Before finalising the document, perform a consistency check to ensure that:
+
+- the Excel formulas agree with the documented manual rules
+- the Power Query explanations agree with the supplied M code
+- the Pivot sources agree with the supplied workbook
+- the monthly field names agree with Report End Date
+- the validated Within SLA rule uses < and not <=
+- Cluster uses ICS Group Country
+- CSR is mapped to IVS
+- SPM is mapped to CVE
+- CVE uses the documented special key relationship
+- blank planned remediation values are explained according to the validated No Plan Date reporting rule
+- no unconfirmed detail is presented as confirmed fact
