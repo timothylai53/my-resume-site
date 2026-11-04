@@ -1,99 +1,20 @@
-what is my limitation for this Automation now 
-Based on the workflow and M code we built, your automation’s main limitations are these:
+Please answer these questions about my current VM report workflow. Describe structure only — do not include file paths, real application names, people’s names or any data values.
 
-1. It is semi-automated, not fully unattended
-You still need to:
+Queries and loading
 
-Back up the completed report.
-Archive the previous raw file into Medium_History.
-Replace Raw_VM_Data.xlsx.
-Run the refresh.
-Validate and save the results.
-If you overwrite the previous raw file without archiving it, that month’s Medium history may be lost.
+List all queries in Master_VM_Report, and for each: what it does, which query it references, and whether it is loaded to a sheet, to the Data Model, or connection only.
+Which queries read files directly (File.Contents, Excel.Workbook, Folder.Files), and which files or folders do they read?
+How are the Medium_History files combined: one query per file, or a folder combine? Is each history file read once per refresh, or once per Medium sheet (PT, IVS, AVS, CVE)?
 
-2. Medium reports use a fixed historical population
-This is the most important limitation in your current code.
+Medium logic
+4. Where does the Medium population (the fixed list of IDs) come from: a separate Medium Data Set file, or built from the history files?
+5. For each month, which columns are taken from the raw data, and how are the monthly columns created (merge then expand, pivot, or something else)?
+6. How is “keep the first match” implemented for duplicate IDs (Table.Distinct, Table.FirstN after a merge, or other)?
 
-Your Medium queries start from:
+Outputs
+7. What are the final outputs: which sheets have PivotTables, which have SUMIFS/COUNTIFS or GETPIVOTDATA formulas, and which tables feed them?
+8. Do any formulas or PivotTables sit on top of a query output table that is overwritten on refresh?
 
-
-
-qryMediumPT_History
-qryMediumIVS_History
-qryMediumAVS_History
-qryMediumCVE_History
-Then use Left Outer joins to retrieve monthly values.
-
-That means:
-
-Existing historical IDs receive updated snapshots.
-New IDs appearing only in the latest raw dataset are not automatically added to the Medium population.
-This is correct if your report intentionally tracks a fixed baseline cohort. If it should include newly discovered Medium findings, we need additional population-update logic.
-
-3. Input structure must remain consistent
-The queries depend on the configured:
-
-File path
-Filename
-Worksheet name
-Column names
-Table and query names
-For example, changing Unique Reference ID, Business Function, or Report End Date can break processing or produce missing values.
-
-Some steps use MissingField.UseNull, which can turn a missing column into blanks rather than immediately showing a clear error.
-
-4. Zero errors does not guarantee correct data
-We added error handling that replaces some errors with null.
-
-This allows the workbook to refresh, but it can also hide:
-
-Invalid dates
-Broken historical Excel formulas
-Incorrect data types
-Missing lookup values
-“0 errors” means the query loaded successfully, not that every record is correct. Record-level checks and reconciliation are still necessary.
-
-5. Duplicate identifiers are not resolved by business rules
-Your snapshot code keeps the first matching record for an ID.
-
-If the same ID appears twice with different statuses or planned dates, the code does not determine which is authoritative. Duplicate archive files for the same reporting period can also introduce conflicting matches.
-
-Keep one authoritative snapshot per month and investigate conflicting duplicate IDs.
-
-6. History headers do not include the year
-Your dated columns currently use labels such as:
-
-
-
-Remediation Status (31 Aug)
-There is no year in the header. Therefore, August 2027 could collide with August 2026, particularly when the month-end label is identical.
-
-Before extending this across reporting years, use year-qualified history names, for example:
-
-
-
-Remediation Status (31 Aug 2026)
-The permanent (Latest) fields can stay unchanged.
-
-7. Summary formulas do not automatically follow Pivot filters
-Your SUMIFS and COUNTIFS formulas apply the criteria written inside them. They do not inherit PivotTable filter selections.
-
-For example, the planned-target formulas explicitly include:
-
-
-
-Exception
-Assigned
-In Progress
-Re-Assignment Requested
-If the reporting filters change, those formulas must be reviewed too. GETPIVOTDATA follows its referenced Pivot, but still depends on correct field names and an anchor inside that Pivot.
-
-8. Performance may slow as history grows
-Your queries process archived data month by month and repeatedly merge snapshots. As more large raw files accumulate, refresh time and workbook size may increase.
-
-We have not yet measured the practical performance limit for your workbook.
-
-How I would describe it in your documentation
-The solution automates monthly data preparation, historical snapshot reconstruction and report calculations within an Excel-based workflow. It remains dependent on manual input archiving, consistent source structures, maintained reference mappings and operator validation. The current Medium implementation tracks the existing historical ID population rather than automatically adding new findings.
-
-My priorities before calling it production-ready: confirm the fixed-population requirement, add years to historical headers, and add checks for missing matches, invalid dates and duplicate IDs.
+Process
+9. List the full monthly manual steps from receiving the new raw file to sending the report, in order.
+10. Which parts of the four VM summaries, Remote Exposure Medium and the CISO MI weekly report are done in this workbook, and which are done elsewhere?
