@@ -1,178 +1,78 @@
-⚠️ Some relevant content wasn't included due to your organization's policies. Learn about access restrictions
 
-Below is a structure-only description based on the M code and workflow you supplied. I have excluded paths, application names, people’s names and record values.
 
-Verification limit: the current master workbook’s contents were not available for inspection, so the inventory below distinguishes confirmed query logic from load settings or workbook details that still need verification.
+Standard Chartered Bank
+My account
 
-1. Queries and loading
-Main queries identified in your workflow
-Query	Purpose	References/source	Load destination established in our setupqryRawVM	Imports current raw VM data; cleans identifiers; adds IBS, Cluster, Prioty and Within SLA?	Current raw workbook, qryIBS, qryCluster	Worksheet table
-qryIBS	Supplies the IBS identifier lookup	Reference mapping source; exact source M code not supplied	Not confirmed
-qryCluster	Supplies the Cluster lookup	Cluster mapping source; exact source M code not supplied	Not confirmed
-qryMediumHistory	Combines archived raw VM snapshots	Monthly archive folder and folder-combine helper queries	Connection only
-qryMediumPT_History	Reads the existing PT baseline table and older snapshot columns	Existing in-workbook PT table	Connection only
-qryMediumIVS_History	Reads the existing IVS baseline table and older snapshot columns	Existing in-workbook IVS table	Connection only
-qryMediumAVS_History	Reads the existing AVS baseline table and older snapshot columns	Existing in-workbook AVS table	Connection only
-qryMediumCVE_History	Reads the existing CVE baseline table; applies types and error handling	Existing in-workbook CVE table through Excel.CurrentWorkbook	Connection only
-qryMediumPT	Adds archived/current snapshots, Latest fields and planning flags to the PT baseline	qryMediumPT_History, qryMediumHistory, qryRawVM	Worksheet table: tblMediumPT_Automated
-qryMediumIVS	Same structure, with IVS/CSR source filtering	qryMediumIVS_History, qryMediumHistory, qryRawVM	Worksheet table: tblMediumIVS_Automated
-qryMediumAVS	Same structure, with AVS source filtering	qryMediumAVS_History, qryMediumHistory, qryRawVM	Worksheet table: tblMediumAVS_Automated
-qryMediumCVE	Same structure, with SPM filtering and the special historical identifier join	qryMediumCVE_History, qryMediumHistory, qryRawVM	Worksheet table: tblMediumCVE_Automated
-qryReportDate	Returns the current reporting date and display label	qryRawVM	Small worksheet table: tblReportDate
 
-Additional helper queries: the folder-combine operation creates sample-file/transform helpers and a parameter. Their exact names and load settings were not supplied, so I cannot honestly label this a complete workbook query inventory.
 
-Temporary query: qryMediumAugHistory was used for testing. The permanent queries no longer require it; whether it has actually been deleted is unconfirmed.
-
-Data Model: no Data Model loading was established in the workflow we built. Actual workbook connection settings still require inspection.
-
-2. Which queries read files directly?
-Query/group	Direct-read structureqryRawVM	Uses File.Contents and Excel.Workbook to read the current raw VM workbook
-qryMediumHistory and its transform helpers	Folder-combine structure reads archived raw VM workbooks; exact generated M code was not supplied
-Medium _History queries	Read existing Excel tables inside the master workbook, not archived files directly
-Final Medium queries	Reference other queries; no direct file reads in the supplied code
-qryReportDate	References qryRawVM; no direct file read
-qryIBS / qryCluster	Direct-read functions and source locations are unconfirmed because their M code was not supplied
-3. How are archive files combined and read?
-
-The permanent design uses one folder combine, not one manually created query per archived file.
-
-All four final Medium queries reference the shared qryMediumHistory query.
-
-However, a shared query does not prove that each physical file is read only once per refresh. The supplied code does not establish a guaranteed shared cache or single materialised read across the four outputs.
-
-Therefore:
-
-Logical structure: one shared folder-history query.
-Physical reads per refresh: not measured or guaranteed.
-It would be inaccurate to claim either “exactly once” or “exactly once per Medium sheet” without observing refresh execution.
-4. Where does the fixed Medium population come from?
-
-It comes from the existing Medium baseline tables copied into the master workbook.
-
-Those tables are read by the four _History queries. The manual workflow also describes a fixed identifier list in each Medium sheet.
-
-It is not rebuilt from the archive folder.
-
-The final queries use those baseline tables as the left side of their joins. Consequently:
-
-Existing baseline records receive monthly snapshot values.
-Records found only in current or archived raw data are not automatically appended to the Medium population.
-The original upstream source of those baseline lists, before they were copied into the workbook, is not confirmed.
-5. Which monthly fields are taken from raw data, and how are they created?
-
-Each monthly snapshot retrieves:
-
-Remediation Status
-Remediation Domain
-Remediation Planned Date
-Final Severity Rating
-
-Report End Date determines the snapshot label.
-
-The creation method is:
-
-Select the required source fields.
-Clean the matching identifier.
-Prepare one record per identifier.
-Convert the planned date to a month label.
-Left Outer merge into the baseline.
-Expand the four snapshot fields into dated columns.
-
-Archived reporting dates are processed using List.Accumulate. This is repeated merge-and-expand, not a Power Query pivot operation.
-
-The Latest fields duplicate the current snapshot’s corresponding fields. The planning flags are then calculated from the Latest planned month.
-
-Important structural detail: the supplied code does not refresh the baseline’s geography or other descriptive columns from current raw data. Those remain from the baseline unless another step updates them.
-
-6. How is “keep the first match” implemented?
-
-Your supplied code uses:
-
-Plain Text
-Table.Group by identifier
-→ Table.First within each group
-→ Table.ExpandRecordColumn
-
-It does not use:
-
-Table.Distinct
-Table.FirstN after a merge
-A latest-date or business-priority selection rule
-
-It keeps the first record encountered in each identifier group. There is no explicit sorting rule to resolve conflicting duplicates.
-
-7. Final outputs and their sources
-Output area	Structure	Feeding sourceMain processed VM sheet	Query-loaded table	qryRawVM
-Summary	PivotTables plus remediation-rate formulas beside them	Main processed VM table
-Medium automated sheets	Query-loaded tables containing baseline fields, dated history, Latest fields and planning flags	Final PT/IVS/AVS/CVE queries
-Remote Exp Medium	Scope, Progress and Residual PivotTables; country/grand-total rates; PT and Non-PT KPI blocks	Corresponding automated Medium tables
-Report-date helper area	Small query-loaded table	qryReportDate
-Formula structure
-Summary rates: header-based INDEX/MATCH formulas were introduced to replace fixed category-column references.
-Remote remediation rates: GETPIVOTDATA retrieves Progress and Scope by country, with separate grand-total formulas.
-KPI totals: COUNTA/COUNTIFS against automated Medium tables.
-Planning KPI totals: SUMIFS against the planning flags, with explicit status and Cluster criteria.
-Report titles: formulas reference tblReportDate.
-
-These source-table formulas do not inherit Pivot filters. Their criteria must explicitly reproduce the required reporting population.
-
-8. Do formulas or PivotTables sit on query output that is overwritten?
-
-The intended design keeps them separate:
-
-Query output tables occupy dedicated data areas.
-PivotTables sit on reporting sheets.
-Rate/KPI/title formulas sit outside the query tables.
-Historical baseline tables remain separate from automated output tables.
-
-Query refresh replaces the contents of the output tables, not the separate report formulas.
-
-The exact current placement has not been verified. In particular, the report-date helper must remain outside the existing Cluster mapping table and any area that another table or Pivot can expand into.
-
-Also, a final Medium query must not load over its own baseline source table.
-
-9. Full monthly manual steps
-Receive the new raw VM workbook.
-Confirm the expected worksheet, required columns and reporting period.
-Back up the completed master report.
-Archive the outgoing current raw workbook before replacing it.
-Confirm the archive is the authoritative snapshot for that period, without duplicate copies.
-Replace the current raw input workbook while retaining the expected filename and worksheet structure.
-Update reference mappings if an approved mapping change is required.
-Open the master workbook and run Refresh All.
-Wait for the query outputs to finish.
-Check query errors, missing matches, reporting dates and row populations.
-Confirm historical snapshots remain and Latest fields match the current reporting period.
-Refresh the report PivotTables after the source tables have finished updating.
-Check Pivot sources, fields and actual filter selections.
-Validate Summary totals and remediation rates.
-Validate Remote Exp Medium Scope, Progress, Residual and KPI calculations.
-Confirm source-table formulas use the intended status/geography criteria.
-Confirm dynamic titles display the current reporting period.
-Save the validated report.
-Send or publish it through the normal reporting process.
-
-The sending/publishing step is not automated by the supplied Power Query code. The operator guide supports the archive, replace, refresh and validation sequence.
-
-10. What is done here versus elsewhere?
-Confirmed inside this workbook
-Current VM data preparation.
-IBS, Cluster, Prioty and Within SLA enrichment.
-The Summary reporting layer.
-Medium baseline-to-monthly matching.
-Archived snapshot reconstruction.
-Latest fields and planning flags.
-Remote Exp Medium PivotTables and KPI/rate formulas.
-Dynamic reporting-date labels.
-
-The documented manual workflow identifies four Summary PivotTables and the Remote Medium reporting layer within the same reporting workbook.
-
-Not confirmed as part of this workbook
-The complete production of a separate CISO MI weekly report.
-Its separate input sources, transformations, output sheets and delivery process.
-Whether “four VM summaries” means the four Summary PivotTables or four separately delivered reports.
-
-Weekly-report references appeared in your earlier lookup formulas, but that does not establish a weekly-report automation pipeline in this master workbook.
-
-If “four VM summaries” means the four Summary PivotTables, they belong here. If it means separate reporting deliverables, their boundary remains unconfirmed.
+TL
+My account
+Subscriptions
+Security & privacy
+App permissions	
+Apps & devices
+Tools & add-ins
+Subscriptions
+These are the licenses currently assigned to you and your unique ID. If you need help accessing a product or service, this information may be helpful for your admin, IT department, or Microsoft Support. Your use of the service(s) is subject to the agreements your organization has with Microsoft. Your organization may have enabled you to use certain connected services in Office 365, which are covered by separate terms and privacy commitments. Learn more about Microsoft's other connected services here.
+User unique identifier and license status
+User unique identifier
+100320063E7DEFC0
+Licenses
+Microsoft 365 Copilot (add-on)
+Microsoft Viva Insights Backend
+Microsoft Viva Insights
+Microsoft 365 Copilot in Productivity Apps
+Microsoft 365 Copilot in Microsoft Teams
+Microsoft Copilot with Graph-grounded chat
+Intelligent Search
+Microsoft 365 E5
+Remote help
+Microsoft Tunnel for Mobile Application Management
+Intune Endpoint Privilege Management
+Intune ServiceNow Integration
+Intune Plan 2
+Microsoft Intune Advanced Analytics
+Microsoft Cloud PKI
+Intune Enterprise Application Management
+Microsoft Teams Events
+Microsoft Mesh
+Microsoft eCDN
+Insights by MyAnalytics Backend
+DO NOT USE - Microsoft MyAnalytics (Full)
+People Skills - Foundation
+RETIRED - Places Core
+Defender Platform for Office 365
+Immersive spaces for Teams
+Purview Discovery
+Customer Lockbox (A)
+Avatars for Teams (additional)
+Avatars for Teams
+RETIRED - Commercial data protection for Microsoft Copilot
+Microsoft 365 Audit Platform
+Microsoft 365 Lighthouse (Plan 1)
+Nucleus
+Information Protection and Governance Analytics – Standard
+Information Protection and Governance Analytics - Premium
+Common Data Service for Teams
+Microsoft Communications DLP
+Microsoft Search
+To-Do (Plan 3)
+Power Automate for Office 365
+Microsoft Teams
+Azure Information Protection Premium P2
+Azure Information Protection Premium P1
+Microsoft Intune Plan 1
+Microsoft Entra ID P1
+Office for the Web
+SharePoint (Plan 2)
+Microsoft Planner
+The latest desktop version of Office
+Skype for Business Online (Plan 2)
+Microsoft 365 Audio Conferencing
+Customer Lockbox
+Exchange Online (Plan 2)
+Microsoft Defender for Office 365 (Plan 1)
+Microsoft Fabric (Free)
+Purview Discovery
+Exchange Foundation
+Power BI (free)
