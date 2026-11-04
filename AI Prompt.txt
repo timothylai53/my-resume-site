@@ -1,49 +1,99 @@
-Week 6: 19 Oct – 23 Oct 2026
-Monday, 19 Oct
-Followed up with Selvam, Keren to obtain the internship induction photos from the previous week's programme for sharing with the other interns.
-Continued internship/project-related work following the induction week.
-Tuesday, 20 Oct
-Requested the latest CISO MI 23, CISO MI 24 and SPM Live Master Search data from Saw, Max Thean Hock because my MSTR access was still unavailable.
-Worked with the updated CISO MI reporting datasets supplied by Chong, Connie Kok Lee.
-Updated the CISO MI summary report and informed Saw, Max Thean Hock that the summary was completed without the burndown section.
-Worked with CISO MI_7Oct2026 and CISO MI_16Oct2026 as part of the CISO MI reporting work.
-Wednesday, 21 Oct
-Joined a work-related call after Saw, Max Thean Hock asked me to join because the discussion was related to conduct.
-Attended the Weekly Security Remediation Oversight Working Group (ROWG) Meeting. The meeting was transcribed and included vulnerability-management topics such as VM records, ICV vulnerabilities and month-end reporting.
-Thursday, 22 Oct
-Worked on arranging the next project discussion with Kaushik1, Akshaya; the discussion was moved to Friday at 2:30 PM.
-Contacted IT support regarding installation of the office printer driver and printing access. I was informed that the printing-access request required line-manager approval.
-Continued working on VM reporting/project activities.
-Friday, 23 Oct
-Attended Proposal Discussion with Kaushik1, Akshaya; M365 records show that I joined the Teams meeting.
-Discussed the internship project/proposal direction with Kaushik1, Akshaya.
-Helped another intern understand how to arrange a meeting and check availability using Outlook's Scheduling Assistant.
-Week 7: 26 Oct – 30 Oct 2026
-Monday, 26 Oct
-Worked from home that day.
-Continued developing the VM reporting automation/project documentation. The workflow documented the existing monthly VM report process, including SLA calculation, IBS and Cluster mapping, Prioty classification, Summary PivotTables and Medium PT/IVS/CVE/AVS reporting.
-Tuesday, 27 Oct
-Submitted my internship project proposal to Appaduria, Aravind Kumar for review after discussing the project direction with Kaushik1, Akshaya.
-Defined the project as two separate tracks: Power Query for the office VM reporting automation and a web-based prototype for the university project.
-Received a response from Appaduria, Aravind Kumar requesting a meeting to run through the proposal.
-Received the latest Critical CISO MI PT remediation status information from Saw, Max Thean Hock for reporting/reference purposes.
-Wednesday, 28 Oct
-Attended Internship Project Proposal Review & Discussion with Appaduria, Aravind Kumar, Kaushik1, Akshaya and Saw, Max Thean Hock. M365 records confirm my attendance.
-Prepared VM Reporting Automation - Manager Update.pptx to present the proposed project direction, comparing web development, Power Query, and Python/Pandas approaches.
-Revised the automation implementation timeline to organise it into Analysis & Planning, Design, Development, Testing, Deployment, and Documentation & Handover phases after discussing it with Saw, Max Thean Hock.
-Updated the Power Query delivery plan, including business-rule confirmation, development, output validation against the manual report, parallel runs, and handover documentation.
-Attended the Weekly Security Remediation Oversight Working Group (ROWG) Meeting, where remediation status, vulnerability findings, ownership mapping, SLA issues and upcoming remediation activities were discussed. M365 records confirm my attendance.
-Thursday, 29 Oct
-Continued developing documentation for the Power Query-based VM Reporting Automation solution.
-Prepared VM Reporting Automation, a Monthly Operator Guide documenting the completed automation workflow, including the main VM dataset processing, IBS classification, Cluster mapping, Prioty classification, Within SLA calculation, Summary reporting, Medium PT/IVS/CVE/AVS reporting, historical snapshots and Remote Exp Medium reporting.
-Documented the simplified monthly process as archive → replace → refresh → validate, reducing the previous manual formula, lookup and monthly-column update work.
-Received confirmation that my OCIR ID / MSTR access request was completed after previously waiting for access.
-Friday, 30 Oct, today
+what is my limitation for this Automation now 
+Based on the workflow and M code we built, your automation’s main limitations are these:
 
-Because it is still 10:35 AM today, there is not yet enough M365 evidence to claim a full day's work.
+1. It is semi-automated, not fully unattended
+You still need to:
 
-So for the logbook so far, the safest continuation is:
+Back up the completed report.
+Archive the previous raw file into Medium_History.
+Replace Raw_VM_Data.xlsx.
+Run the refresh.
+Validate and save the results.
+If you overwrite the previous raw file without archiving it, that month’s Medium history may be lost.
 
-Continued internship activities following completion of the VM Reporting Automation operator documentation from the previous day. The latest confirmed automation document is VM Reporting Automation.
+2. Medium reports use a fixed historical population
+This is the most important limitation in your current code.
 
-I wouldn't add anything more specific for today yet because the available evidence doesn't show another substantial task you completed this morning.
+Your Medium queries start from:
+
+
+
+qryMediumPT_History
+qryMediumIVS_History
+qryMediumAVS_History
+qryMediumCVE_History
+Then use Left Outer joins to retrieve monthly values.
+
+That means:
+
+Existing historical IDs receive updated snapshots.
+New IDs appearing only in the latest raw dataset are not automatically added to the Medium population.
+This is correct if your report intentionally tracks a fixed baseline cohort. If it should include newly discovered Medium findings, we need additional population-update logic.
+
+3. Input structure must remain consistent
+The queries depend on the configured:
+
+File path
+Filename
+Worksheet name
+Column names
+Table and query names
+For example, changing Unique Reference ID, Business Function, or Report End Date can break processing or produce missing values.
+
+Some steps use MissingField.UseNull, which can turn a missing column into blanks rather than immediately showing a clear error.
+
+4. Zero errors does not guarantee correct data
+We added error handling that replaces some errors with null.
+
+This allows the workbook to refresh, but it can also hide:
+
+Invalid dates
+Broken historical Excel formulas
+Incorrect data types
+Missing lookup values
+“0 errors” means the query loaded successfully, not that every record is correct. Record-level checks and reconciliation are still necessary.
+
+5. Duplicate identifiers are not resolved by business rules
+Your snapshot code keeps the first matching record for an ID.
+
+If the same ID appears twice with different statuses or planned dates, the code does not determine which is authoritative. Duplicate archive files for the same reporting period can also introduce conflicting matches.
+
+Keep one authoritative snapshot per month and investigate conflicting duplicate IDs.
+
+6. History headers do not include the year
+Your dated columns currently use labels such as:
+
+
+
+Remediation Status (31 Aug)
+There is no year in the header. Therefore, August 2027 could collide with August 2026, particularly when the month-end label is identical.
+
+Before extending this across reporting years, use year-qualified history names, for example:
+
+
+
+Remediation Status (31 Aug 2026)
+The permanent (Latest) fields can stay unchanged.
+
+7. Summary formulas do not automatically follow Pivot filters
+Your SUMIFS and COUNTIFS formulas apply the criteria written inside them. They do not inherit PivotTable filter selections.
+
+For example, the planned-target formulas explicitly include:
+
+
+
+Exception
+Assigned
+In Progress
+Re-Assignment Requested
+If the reporting filters change, those formulas must be reviewed too. GETPIVOTDATA follows its referenced Pivot, but still depends on correct field names and an anchor inside that Pivot.
+
+8. Performance may slow as history grows
+Your queries process archived data month by month and repeatedly merge snapshots. As more large raw files accumulate, refresh time and workbook size may increase.
+
+We have not yet measured the practical performance limit for your workbook.
+
+How I would describe it in your documentation
+The solution automates monthly data preparation, historical snapshot reconstruction and report calculations within an Excel-based workflow. It remains dependent on manual input archiving, consistent source structures, maintained reference mappings and operator validation. The current Medium implementation tracks the existing historical ID population rather than automatically adding new findings.
+
+My priorities before calling it production-ready: confirm the fixed-population requirement, add years to historical headers, and add checks for missing matches, invalid dates and duplicate IDs.
