@@ -1,1 +1,119 @@
-SnapshotMonth	MonthEnd	MediumType	Key	Remediation Status	Remediation Domain	Planned Remediation (Month)	Final Severity Rating	Conflict
+let
+    Cfg = Config,
+    Ref = src_Reference,
+    Source = src_ROWG,
+    PrioName = Cfg[PriorityHeader],
+
+    // ---------- Required columns ----------
+    Required = {
+        "Unique Reference ID", "CIID", "CI Name", "Business Function", "Final Severity Rating",
+        "ICS Group Country", "CJ or IF", "SLA Due Date", "Report End Date"},
+    Missing = List.Difference(Required, Table.ColumnNames(Source)),
+    Checked =
+        if List.IsEmpty(Missing) then Source
+        else error Error.Record("Missing columns", "The raw file is missing these columns: " & Text.Combine(Missing, ", ")),
+
+    // ---------- Helpers ----------
+    IsBlank = (v as any) as logical => v = null or (v is text and Text.Trim(v) = ""),
+    Norm = (v as any) as nullable text =>
+        if v = null then null
+        else let t = Text.Lower(Text.Trim(Text.From(v))) in if t = "" then null else t,
+    CiidText = (v as any) as nullable text =>
+        if v = null then null
+        else if v is number then (if Number.Round(v) = v then Number.ToText(v, "0") else Number.ToText(v))
+        else let t = Text.Trim(Text.From(v)) in if t = "" then null else t,
+
+    // ---------- Cluster: ICS Group Country -> Cluster (trimmed, case-insensitive) ----------
+    ClusterKeyed = Table.AddColumn(Ref[Cluster], "k", each Norm(Record.Field(_, Cfg[ClusterCountryColumn]))),
+    ClusterRows = Table.Distinct(Table.SelectRows(ClusterKeyed, each [k] <> null), {"k"}),
+    ClusterRec = Record.FromList(
+        List.Transform(Table.Column(ClusterRows, Cfg[ClusterValueColumn]), each if _ = null then null else Text.Trim(Text.From(_))),
+        ClusterRows[k]),
+    CalcCluster = (v as any) as nullable text =>
+        let key = Norm(v) in
+        if key = null then "NA" else Record.FieldOrDefault(ClusterRec, key, "Check Mapping"),
+
+    // ---------- IBS: CIID found in the IBS list -> IBS, otherwise Non-IBS ----------
+    IbsKeys = List.Distinct(List.RemoveNulls(List.Transform(Table.Column(Ref[IBS], Cfg[IbsKeyColumn]), CiidText))),
+    IbsRec = Record.FromList(List.Repeat({true}, List.Count(IbsKeys)), IbsKeys),
+    CalcIbs = (v as any) as nullable text =>
+        let key = CiidText(v) in
+        if key = null then null else if Record.HasFields(IbsRec, key) then "IBS" else "Non-IBS",
+
+    // ---------- Business Function mapping ----------
+    //   contains CSR -> IVS, AVS -> AVS, IVS -> IVS, PT -> PT, SPM -> CVE
+    MapBF = (v as any) as nullable text =>
+        let key = Norm(v) in
+        if key = null then null
+        else if Text.Contains(key, "csr") then "IVS"
+        else Record.FieldOrDefault([avs = "AVS", ivs = "IVS", pt = "PT", spm = "CVE"], key, null),
+
+    // ---------- Prioty rules (evaluated top to bottom, first match wins) ----------
+    PriorityRules = {
+        [CJ = "if-cj",  IBS = null,      BF = {"IVS", "AVS", "CVE", "PT"}, P = "P1"],
+        [CJ = "if",     IBS = "IBS",     BF = {"IVS", "AVS", "CVE", "PT"}, P = "P1"],
+        [CJ = "if",     IBS = "Non-IBS", BF = {"IVS", "AVS"},             P = "P2"],
+        [CJ = "if",     IBS = "Non-IBS", BF = {"CVE", "PT"},              P = "P1"],
+        [CJ = "cj",     IBS = null,      BF = {"IVS", "AVS", "CVE", "PT"}, P = "P2"],
+        [CJ = "others", IBS = "IBS",     BF = {"IVS", "AVS", "CVE", "PT"}, P = "P2"],
+        [CJ = "others", IBS = "Non-IBS", BF = {"IVS", "AVS"},             P = "P4"],
+        [CJ = "others", IBS = "Non-IBS", BF = {"CVE", "PT"},              P = "P3"]
+    },
+    CalcPrioty = (ibs as nullable text, bfSource as any, bfMapped as nullable text, cjif as any, severity as any) as nullable text =>
+        let
+            sev = Norm(severity),
+            cj = Norm(cjif),
+            missing = ibs = null or Norm(bfSource) = null or cj = null or sev = null,
+            eligible = sev = "critical" or sev = "high" or (sev = "medium" and bfMapped = "PT"),
+            hit = List.First(List.Select(PriorityRules,
+                (r) => r[CJ] = cj and (r[IBS] = null or r[IBS] = ibs) and List.Contains(r[BF], bfMapped)))
+        in
+            if missing then null
+            else if not eligible then null
+            else if hit <> null then hit[P]
+            else "Check Input",
+
+    // ---------- Within SLA? ----------
+    CalcSla = (slaRaw as any, redRaw as any) as text =>
+        let
+            sla = fnToDate(slaRaw),
+            red = fnToDate(redRaw)
+        in
+            if (not IsBlank(slaRaw) and sla = null) or (not IsBlank(redRaw) and red = null) then "Invalid Date"
+            else if IsBlank(slaRaw) then "No SLA"
+            else if IsBlank(redRaw) then "No Report End Date"
+            else if red < sla then "Yes"
+            else "No",
+
+    // ---------- Add the rule columns ----------
+    OutputCols = {"Within SLA?", "SLA Due Month", "IBS", "Cluster", PrioName},
+    Base = Table.RemoveColumns(Checked, List.Intersect({Table.ColumnNames(Checked), OutputCols})),
+    AddSla = Table.AddColumn(Base, "Within SLA?", each CalcSla([SLA Due Date], [Report End Date]), type text),
+    // SLA Due Month = month of SLA Due Date as yyyy-MM (e.g. 2026-09); blank or invalid -> blank
+    AddSlaMonth = Table.AddColumn(AddSla, "SLA Due Month",
+        each let d = fnToDate([SLA Due Date]) in if d = null then null else Date.ToText(d, "yyyy-MM", "en-US"), type nullable text),
+    AddIbs = Table.AddColumn(AddSlaMonth, "IBS", each CalcIbs([CIID]), type nullable text),
+    AddCluster = Table.AddColumn(AddIbs, "Cluster", each CalcCluster([ICS Group Country]), type nullable text),
+    AddBF = Table.AddColumn(AddCluster, "_MappedBF", each MapBF([Business Function]), type nullable text),
+    AddPrio = Table.AddColumn(AddBF, PrioName,
+        each CalcPrioty([IBS], [Business Function], [_MappedBF], [CJ or IF], [Final Severity Rating]), type nullable text),
+    DropTemp = Table.RemoveColumns(AddPrio, {"_MappedBF"}),
+
+    // ---------- Column positions: Within SLA?, SLA Due Month after SLA Due Date; IBS, Cluster, Prioty after CI Name ----------
+    InsertAfter = (cols as list, anchor as text, newCols as list) as list =>
+        let pos = List.PositionOf(cols, anchor) in
+        if pos < 0 then cols & newCols
+        else List.FirstN(cols, pos + 1) & newCols & List.Skip(cols, pos + 1),
+    Order1 = InsertAfter(Table.ColumnNames(Base), "SLA Due Date", {"Within SLA?", "SLA Due Month"}),
+    Order2 = InsertAfter(Order1, "CI Name", {"IBS", "Cluster", PrioName}),
+    Reordered = Table.ReorderColumns(DropTemp, Order2),
+
+    // ---------- Show date columns as dates (invalid values are kept as they are) ----------
+    DateCols = List.Intersect({Table.ColumnNames(Reordered), {
+        "SLA Start Date", "SLA Due Date", "Last Detected", "SNC Closed Date",
+        "Baselined Remediation Planned Date", "Remediation Planned Date", "Remediation Closed Date",
+        "Report Start Date", "Report End Date"}}),
+    Dated = Table.TransformColumns(Reordered,
+        List.Transform(DateCols, (c) => {c, each let d = fnToDate(_) in if d <> null then d else _}))
+in
+    Dated
