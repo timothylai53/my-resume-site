@@ -1,212 +1,678 @@
 =====================================================================
- VM Monthly Report - new Power Query workbook
- BUILD GUIDE (company version)
+ VM Monthly Report - Power Query (company version)
+ 21 queries. For each one:
+   Power Query Editor > Home > New Source > Other Sources > Blank Query
+   > Home > Advanced Editor > Ctrl+A > paste the code between the two
+     dashed lines > Done
+   > in the Queries pane, right-click the query > Rename > type the name
+ Create them in the order below (1 to 21). Read BUILD_GUIDE.txt first.
 =====================================================================
 
-FILES (all plain text)
-  PQ_Company_M_Code.txt   21 queries, paste one by one
-  SaveSnapshot_Script.txt Office Script that saves each month's Medium values
-  Snapshots_Headers.txt   one line of headers for the tblSnapshots table
-  BUILD_GUIDE.txt         this file
 
-WHAT IS DIFFERENT FROM THE OLD WORKBOOK
-  - Only ONE raw ROWG file is read per refresh (the one in the Input folder).
-  - Medium history is no longer rebuilt from old raw files. Each month's
-    Medium values are saved once into a small table (tblSnapshots).
-  - The Medium_History folder, copying and renaming files are no longer needed.
-  - Output table names and column names stay the same as the old report
-    (tblMediumPT_Automated, "Remediaiton Domain (Latest)", etc.), so the
-    Remote Medium Exp PivotTables and KPI formulas can point to them.
+---------------------------------------------------------------------
+QUERY 1: pInputFolder
+  Parameter: the folder that holds the current month's raw ROWG file.
+  Change the path to your own Input folder.
+---------------------------------------------------------------------
+"C:\CHANGE\THIS\PATH\Input" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+---------------------------------------------------------------------
 
-MEDIUM RULES USED (same as the old workbook)
-  - Status snapshot comes from raw "Remediation Status".
-  - Raw filter before matching (Business Function, upper case):
-      PT  = PT          (CHECK: confirm in the old qryMediumPT; edit Config if different)
-      IVS = IVS, or contains CSR
-      AVS = AVS
-      CVE = SPM         (baseline "Unique ID (SPM+Hostname)" = raw "Unique Reference ID")
-  - Keys: Text.Clean + Trim + Upper on both sides.
-  - Same raw ID repeated: first row used (counted in chk_Quality).
-  - Planned month: date -> "MMM-yyyy" (en-GB); blank / NA / N/A -> "No Plan Date";
-    text that is not a date is kept as it is.
-  - Cluster and ICS Reporting Hierarchy - Group/Country come from the baseline table.
-  - Planned Within Target (Latest) = planned month >= report month and <= end of report year
-    Remediation Plan Expired (Latest) = planned month < report month
-    (no status filter in the query; the KPI formulas filter the statuses)
 
-=====================================================================
- PART A - ONE-TIME SETUP
-=====================================================================
+---------------------------------------------------------------------
+QUERY 2: pRowgSheet
+  Parameter: the sheet name inside the raw ROWG file.
+---------------------------------------------------------------------
+"ROWG_Detailed Dataset - Monthly" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+---------------------------------------------------------------------
 
-A1. Keep the old workbook as a backup. Do not change it.
 
-A2. Folders (on the company laptop / OneDrive)
-    Create a folder for the new report, with two sub-folders:
-      Input     - holds ONLY the current month's raw ROWG file (.xlsx)
-      Archive   - raw files of past months (backup only, never read)
-    OneDrive: right-click the folder > "Always keep on this device".
+---------------------------------------------------------------------
+QUERY 3: Config
+  All settings in one place. Edit values here, not in other queries.
+---------------------------------------------------------------------
+[
+    // Column headers of the mapping tables (tblClusterMapping, tblIBS)
+    ClusterCountryColumn = "ICS Group Country",
+    ClusterValueColumn = "Cluster",
+    IbsKeyColumn = "CIID",
 
-A3. Create a new blank workbook and save it in that folder.
-    Save often (Ctrl+S), especially before any refresh.
+    // Name of the priority column in vm_Processed
+    PriorityHeader = "Prioty",
 
-A4. Mapping tables
-    Copy the Cluster mapping and the IBS list from the old workbook
-    (Paste Special > Values) into a sheet called "Mappings".
-    Make each one an Excel table: click inside > Ctrl+T > "My table has headers".
-    Table Design > Table Name:
-      Cluster mapping -> tblClusterMapping   (headers: ICS Group Country | Cluster)
-      IBS list        -> tblIBS              (headers: CIID | ...)
-    If your headers are different, keep them and change ClusterCountryColumn,
-    ClusterValueColumn or IbsKeyColumn in QUERY 3 Config.
+    // Raw column used for the Medium "Remediation Status" snapshot
+    MediumStatusColumn = "Remediation Status",
 
-A5. Medium baseline tables
-    From the old workbook, copy the four BASELINE tables (the tables the old
-    _History queries read, NOT the tblMedium..._Automated outputs).
-    Paste Special > Values into four sheets. Ctrl+T on each, then name them:
-      tblMediumPT_Base
-      tblMediumIVS_Base
-      tblMediumAVS_Base
-      tblMediumCVE_Base
-    Keep all baseline columns, including the old dated columns
-    (5 May, 13 May, 31 May, 30 Jun, 31 July).
-    Delete these columns if they are present:
-      - any dated group from 31 Aug onwards
-      - the (Latest) columns and the two planning flag columns
-    (The query also drops them automatically, but deleting keeps it clean.)
+    // Same raw ID found more than once with different values:
+    //   "First" = use the first row (current company behaviour)
+    //   "Flag"  = leave the values blank
+    // Either way, chk_Quality reports how many there were.
+    DuplicateKeyRule = "First",
 
-A6. Snapshots table
-    Add a sheet called "Snapshots".
-    Select columns A, D and G > Format Cells > Text.
-    Open Snapshots_Headers.txt in Notepad, copy the single line, click cell A1, paste.
-    The headers spread over A1:I1 (they are separated by tabs).
-    Select A1:I2 > Ctrl+T > tick "My table has headers" > OK.
-    Table Design > Table Name: tblSnapshots
+    // New monthly column labels: true = "31 Aug 2026", false = "31 Aug"
+    LabelWithYear = true,
 
-A7. Queries
-    Data > Get Data > From Other Sources > Blank Query.
-    Create all 21 queries from PQ_Company_M_Code.txt, in order.
-    Rename each query exactly as written (right-click > Rename).
-    QUERY 1 pInputFolder: put your real Input folder path.
-    QUERY 3 Config: check the PT filter and the other settings.
-    If asked about privacy levels: choose Organizational for all sources.
-    Errors in src_VMTable, src_MedLongTable, med_ThisMonth, med_Long,
-    the four tblMedium..._Automated and chk_Quality are normal at this point.
+    // Culture used to write "Planned Remediation (Month)" values, e.g. "Oct-2026"
+    PlannedMonthCulture = "en-GB",
 
-A8. Close the editor: Home > Close & Load (arrow) > Close & Load To...
-    > Only Create Connection > OK.
+    // Values written in the two planning flag columns
+    FlagTrue = 1,
+    FlagFalse = 0,
 
-A9. Put the first raw file in Input (see Part C), then load to worksheets,
-    IN THIS ORDER (Data > Queries & Connections > right-click > Load To...
-    > Table > New worksheet):
-      1. vm_Processed           (wait until it finishes)
-      2. med_Long               (wait until it finishes)
-      3. tblMediumPT_Automated
-      4. tblMediumIVS_Automated
-      5. tblMediumAVS_Automated
-      6. tblMediumCVE_Automated
-      7. chk_Quality
+    // Medium lists: key column in the baseline table and the Business Function
+    // filter applied to the raw data before matching (compared in upper case).
+    MediumTypes = {
+        [Type = "PT",  KeyColumn = "Unique Reference ID",      BFEquals = {"PT"},  BFContains = {}],
+        [Type = "IVS", KeyColumn = "Unique Reference ID",      BFEquals = {"IVS"}, BFContains = {"CSR"}],
+        [Type = "AVS", KeyColumn = "Unique Reference ID",      BFEquals = {"AVS"}, BFContains = {}],
+        [Type = "CVE", KeyColumn = "Unique ID (SPM+Hostname)", BFEquals = {"SPM"}, BFContains = {}]
+    }
+]
+---------------------------------------------------------------------
 
-A10. Query properties (right-click > Properties) for EVERY query:
-       untick "Enable background refresh"
-     For vm_Processed and med_Long ALSO:
-       untick "Refresh this connection on Refresh All"
-     (Their order matters, so they are refreshed by hand.)
 
-A11. SaveSnapshot script
-     Automate > New Script > select all > paste SaveSnapshot_Script.txt
-     > rename it SaveSnapshot > Save script.
+---------------------------------------------------------------------
+QUERY 4: fnToDate
+  Function: turns any value into a date. Blank or invalid -> null.
+---------------------------------------------------------------------
+(value as any) as nullable date =>
+    if value = null then null
+    else if value is date then value
+    else if value is datetime or value is datetimezone then Date.From(value)
+    else if value is number then
+        (if value > 0 and value < 2958466 then Date.From(value) else null)
+    else
+        let
+            t = Text.Trim(Text.From(value))
+        in
+            if t = "" then null
+            else try Date.FromText(t, [Format = "yyyy-MM-dd", Culture = "en-US"])
+            otherwise try Date.FromText(t, [Format = "d/M/yyyy", Culture = "en-GB"])
+            otherwise try Date.FromText(t, [Format = "d-MMM-yyyy", Culture = "en-US"])
+            otherwise try Date.FromText(t, [Format = "d MMM yyyy", Culture = "en-US"])
+            otherwise null
+---------------------------------------------------------------------
 
-=====================================================================
- PART B - EVERY MONTH
-=====================================================================
 
-  0. Ctrl+S.
-  1. Move last month's raw file from Input to Archive.
-     Put the new raw ROWG file in Input. Input must hold ONE .xlsx file.
-  2. Right-click vm_Processed > Refresh. Wait.
-  3. Right-click med_Long > Refresh. Wait.
-  4. Data > Refresh All. Wait.
-  5. Open chk_Quality and check:
-       Files in Input folder = 1
-       med_Long is for the same month as vm_Processed = 1
-       Duplicate rows in saved Snapshots = 0
-       other counts look normal compared with last month
-  6. Automate > SaveSnapshot > Run.
-  7. Data > Refresh All again (the outputs now show the month as History).
-  8. Refresh the PivotTables if they did not refresh, check the report, Ctrl+S.
+---------------------------------------------------------------------
+QUERY 5: fnCleanKey
+  Function: lookup key = Text.Clean + Trim + Upper. Blank -> null.
+---------------------------------------------------------------------
+(value as any) as nullable text =>
+    if value = null then null
+    else
+        let
+            raw =
+                if value is number and Number.Round(value) = value then Number.ToText(value, "0")
+                else Text.From(value),
+            t = Text.Upper(Text.Trim(Text.Clean(raw)))
+        in
+            if t = "" then null else t
+---------------------------------------------------------------------
 
-  Redoing a month: put that month's raw file back in Input and repeat
-  steps 2 to 6. SaveSnapshot replaces that month in tblSnapshots.
 
-=====================================================================
- PART C - FIRST TIME: REBUILD HISTORY FROM 31 AUG
-=====================================================================
+---------------------------------------------------------------------
+QUERY 6: src_Reference
+  Mapping tables in this workbook. Change the table names here if needed.
+---------------------------------------------------------------------
+let
+    Book = Excel.CurrentWorkbook(),
+    Result = [
+        Cluster = Book{[Name = "tblClusterMapping"]}[Content],
+        IBS = Book{[Name = "tblIBS"]}[Content]
+    ]
+in
+    Result
+---------------------------------------------------------------------
 
-The old workbook rebuilt 31 Aug onwards from the raw files in its
-Medium_History folder. Replay those months once, oldest first:
 
-  1. Copy the August raw file (e.g. VM_2026-08) into Input.
-     Do Part A9 (first time only), then Part B steps 2 to 6.
-  2. Move it to Archive. Put the September raw file in Input. Part B steps 2 to 6.
-  3. Same for October (and any later month).
+---------------------------------------------------------------------
+QUERY 7: src_MediumBase
+  The four Medium baseline tables. Change the table names here if needed.
+---------------------------------------------------------------------
+let
+    Book = Excel.CurrentWorkbook(),
+    Result = [
+        PT  = Book{[Name = "tblMediumPT_Base"]}[Content],
+        IVS = Book{[Name = "tblMediumIVS_Base"]}[Content],
+        AVS = Book{[Name = "tblMediumAVS_Base"]}[Content],
+        CVE = Book{[Name = "tblMediumCVE_Base"]}[Content]
+    ]
+in
+    Result
+---------------------------------------------------------------------
 
-After each month, compare with the old report's columns for that month
-(see Part D). After the last month, tblSnapshots holds every month from
-31 Aug, and the old Medium_History folder is no longer needed.
 
-=====================================================================
- PART D - CHECK AGAINST THE OLD WORKBOOK (same month, same raw file)
-=====================================================================
+---------------------------------------------------------------------
+QUERY 8: src_History
+  Saved monthly Medium snapshots (written by the SaveSnapshot script).
+---------------------------------------------------------------------
+let
+    Source = Excel.CurrentWorkbook(){[Name = "tblSnapshots"]}[Content]
+in
+    Source
+---------------------------------------------------------------------
 
-  vm_Processed vs old qryRawVM output:
-    - row count
-    - counts of Prioty P1 / P2 / P3 / P4 / blank
-    - counts of Cluster values, IBS / Non-IBS, Within SLA? values
-    A quick way: a PivotTable on each table with the field in Rows and
-    Count of Unique Reference ID in Values.
 
-  tblMedium..._Automated vs old tblMedium..._Automated, for each type:
-    - row count (must be equal: every baseline row is kept)
-    - counts of values in "Remediation Status (<month>)"
-    - counts of values in "Planned Remediation (Month) (<month>)"
-      (look for "Sep" vs "Sept" - both workbooks use the same en-GB setting)
-    - SUM of Planned Within Target (Latest) and Remediation Plan Expired (Latest)
+---------------------------------------------------------------------
+QUERY 9: src_VMTable
+  The vm_Processed table already loaded on its sheet.
+  An error here is normal until vm_Processed has been loaded once.
+---------------------------------------------------------------------
+let
+    Source = Excel.CurrentWorkbook(){[Name = "vm_Processed"]}[Content]
+in
+    Source
+---------------------------------------------------------------------
 
-  Note: with LabelWithYear = true the new month columns are called
-  "Remediation Status (31 Aug 2026)"; the old ones were "(31 Aug)".
 
-  Do not replace the old report until every number matches.
+---------------------------------------------------------------------
+QUERY 10: src_MedLongTable
+  The med_Long table already loaded on its sheet.
+  An error here is normal until med_Long has been loaded once.
+---------------------------------------------------------------------
+let
+    Source = Excel.CurrentWorkbook(){[Name = "med_Long"]}[Content]
+in
+    Source
+---------------------------------------------------------------------
 
-=====================================================================
- PART E - PIVOTTABLES AND KPI FORMULAS
-=====================================================================
 
-  Summary PivotTables          -> source table: vm_Processed
-  Remote Medium Exp PivotTables -> source tables: tblMediumPT_Automated,
-                                   tblMediumIVS_Automated, tblMediumAVS_Automated,
-                                   tblMediumCVE_Automated
-  Rebuild them, or copy the sheets from the old workbook and use
-  PivotTable Analyze > Change Data Source for each one.
-  Formulas that use the (Latest) columns and the planning flags keep working
-  because those column names are unchanged.
+---------------------------------------------------------------------
+QUERY 11: src_InputFiles
+  Lists the .xlsx files in the Input folder (does not open them).
+---------------------------------------------------------------------
+let
+    FolderPath = if Text.EndsWith(pInputFolder, "\") then pInputFolder else pInputFolder & "\",
+    Files = Folder.Files(FolderPath),
+    TopLevel = Table.SelectRows(Files, each Text.Lower([Folder Path]) = Text.Lower(FolderPath)),
+    Xlsx = Table.SelectRows(TopLevel, each Text.Lower([Extension]) = ".xlsx" and not Text.StartsWith([Name], "~$")),
+    Slim = Table.SelectColumns(Xlsx, {"Name", "Date modified", "Content"})
+in
+    Slim
+---------------------------------------------------------------------
 
-=====================================================================
- PART F - IF SOMETHING GOES WRONG
-=====================================================================
 
-  "The Input folder must contain exactly one .xlsx file"
-      -> leave only one raw file in Input (close it in Excel first; a
-         temporary ~$ file is ignored).
-  "The raw file is missing these columns"
-      -> the raw file layout changed; the message lists the columns.
-  Formula.Firewall error
-      -> Data > Get Data > Query Options > Current Workbook > Privacy >
-         set the sources to Organizational (or ask IT what is allowed).
-  med_Long month does not match vm_Processed (chk_Quality)
-      -> refresh med_Long, then Refresh All.
-  Expression.Error: column not found
-      -> a column name in Config or a table name in src_Reference /
-         src_MediumBase does not match the workbook. Fix the name there.
-  Refresh very slow or Excel "Not Responding"
-      -> background refresh is off, so Excel freezes while it works.
-         Check Task Manager: if Excel uses CPU, wait. Save before big refreshes.
+---------------------------------------------------------------------
+QUERY 12: src_ROWG
+  Reads the single raw ROWG file in the Input folder.
+---------------------------------------------------------------------
+let
+    Files = src_InputFiles,
+    Checked =
+        if Table.RowCount(Files) = 1 then Files
+        else error Error.Record(
+            "Input folder",
+            "The Input folder must contain exactly one .xlsx file. Found: " & Text.From(Table.RowCount(Files)),
+            pInputFolder),
+    Book = Excel.Workbook(Checked{0}[Content], null, true),
+    Sheet = Book{[Item = pRowgSheet, Kind = "Sheet"]}[Data],
+    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars = true]),
+    NonEmpty = Table.SelectRows(Promoted, each List.NonNullCount(Record.FieldValues(_)) > 0)
+in
+    NonEmpty
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 13: vm_Processed
+  Main dataset: adds Within SLA?, IBS, Cluster and Prioty.
+  Load to a worksheet table.
+---------------------------------------------------------------------
+let
+    Cfg = Config,
+    Ref = src_Reference,
+    Source = src_ROWG,
+    PrioName = Cfg[PriorityHeader],
+
+    // ---------- Required columns ----------
+    Required = {
+        "Unique Reference ID", "CIID", "CI Name", "Business Function", "Final Severity Rating",
+        "ICS Group Country", "CJ or IF", "SLA Due Date", "Report End Date"},
+    Missing = List.Difference(Required, Table.ColumnNames(Source)),
+    Checked =
+        if List.IsEmpty(Missing) then Source
+        else error Error.Record("Missing columns", "The raw file is missing these columns: " & Text.Combine(Missing, ", ")),
+
+    // ---------- Helpers ----------
+    IsBlank = (v as any) as logical => v = null or (v is text and Text.Trim(v) = ""),
+    Norm = (v as any) as nullable text =>
+        if v = null then null
+        else let t = Text.Lower(Text.Trim(Text.From(v))) in if t = "" then null else t,
+    CiidText = (v as any) as nullable text =>
+        if v = null then null
+        else if v is number then (if Number.Round(v) = v then Number.ToText(v, "0") else Number.ToText(v))
+        else let t = Text.Trim(Text.From(v)) in if t = "" then null else t,
+
+    // ---------- Cluster: ICS Group Country -> Cluster (trimmed, case-insensitive) ----------
+    ClusterKeyed = Table.AddColumn(Ref[Cluster], "k", each Norm(Record.Field(_, Cfg[ClusterCountryColumn]))),
+    ClusterRows = Table.Distinct(Table.SelectRows(ClusterKeyed, each [k] <> null), {"k"}),
+    ClusterRec = Record.FromList(
+        List.Transform(Table.Column(ClusterRows, Cfg[ClusterValueColumn]), each if _ = null then null else Text.Trim(Text.From(_))),
+        ClusterRows[k]),
+    CalcCluster = (v as any) as nullable text =>
+        let key = Norm(v) in
+        if key = null then "NA" else Record.FieldOrDefault(ClusterRec, key, "Check Mapping"),
+
+    // ---------- IBS: CIID found in the IBS list -> IBS, otherwise Non-IBS ----------
+    IbsKeys = List.Distinct(List.RemoveNulls(List.Transform(Table.Column(Ref[IBS], Cfg[IbsKeyColumn]), CiidText))),
+    IbsRec = Record.FromList(List.Repeat({true}, List.Count(IbsKeys)), IbsKeys),
+    CalcIbs = (v as any) as nullable text =>
+        let key = CiidText(v) in
+        if key = null then null else if Record.HasFields(IbsRec, key) then "IBS" else "Non-IBS",
+
+    // ---------- Business Function mapping ----------
+    //   contains CSR -> IVS, AVS -> AVS, IVS -> IVS, PT -> PT, SPM -> CVE
+    MapBF = (v as any) as nullable text =>
+        let key = Norm(v) in
+        if key = null then null
+        else if Text.Contains(key, "csr") then "IVS"
+        else Record.FieldOrDefault([avs = "AVS", ivs = "IVS", pt = "PT", spm = "CVE"], key, null),
+
+    // ---------- Prioty rules (evaluated top to bottom, first match wins) ----------
+    PriorityRules = {
+        [CJ = "if-cj",  IBS = null,      BF = {"IVS", "AVS", "CVE", "PT"}, P = "P1"],
+        [CJ = "if",     IBS = "IBS",     BF = {"IVS", "AVS", "CVE", "PT"}, P = "P1"],
+        [CJ = "if",     IBS = "Non-IBS", BF = {"IVS", "AVS"},             P = "P2"],
+        [CJ = "if",     IBS = "Non-IBS", BF = {"CVE", "PT"},              P = "P1"],
+        [CJ = "cj",     IBS = null,      BF = {"IVS", "AVS", "CVE", "PT"}, P = "P2"],
+        [CJ = "others", IBS = "IBS",     BF = {"IVS", "AVS", "CVE", "PT"}, P = "P2"],
+        [CJ = "others", IBS = "Non-IBS", BF = {"IVS", "AVS"},             P = "P4"],
+        [CJ = "others", IBS = "Non-IBS", BF = {"CVE", "PT"},              P = "P3"]
+    },
+    CalcPrioty = (ibs as nullable text, bfSource as any, bfMapped as nullable text, cjif as any, severity as any) as nullable text =>
+        let
+            sev = Norm(severity),
+            cj = Norm(cjif),
+            missing = ibs = null or Norm(bfSource) = null or cj = null or sev = null,
+            eligible = sev = "critical" or sev = "high" or (sev = "medium" and bfMapped = "PT"),
+            hit = List.First(List.Select(PriorityRules,
+                (r) => r[CJ] = cj and (r[IBS] = null or r[IBS] = ibs) and List.Contains(r[BF], bfMapped)))
+        in
+            if missing then null
+            else if not eligible then null
+            else if hit <> null then hit[P]
+            else "Check Input",
+
+    // ---------- Within SLA? ----------
+    CalcSla = (slaRaw as any, redRaw as any) as text =>
+        let
+            sla = fnToDate(slaRaw),
+            red = fnToDate(redRaw)
+        in
+            if (not IsBlank(slaRaw) and sla = null) or (not IsBlank(redRaw) and red = null) then "Invalid Date"
+            else if IsBlank(slaRaw) then "No SLA"
+            else if IsBlank(redRaw) then "No Report End Date"
+            else if red < sla then "Yes"
+            else "No",
+
+    // ---------- Add the rule columns ----------
+    OutputCols = {"Within SLA?", "IBS", "Cluster", PrioName},
+    Base = Table.RemoveColumns(Checked, List.Intersect({Table.ColumnNames(Checked), OutputCols})),
+    AddSla = Table.AddColumn(Base, "Within SLA?", each CalcSla([SLA Due Date], [Report End Date]), type text),
+    AddIbs = Table.AddColumn(AddSla, "IBS", each CalcIbs([CIID]), type nullable text),
+    AddCluster = Table.AddColumn(AddIbs, "Cluster", each CalcCluster([ICS Group Country]), type nullable text),
+    AddBF = Table.AddColumn(AddCluster, "_MappedBF", each MapBF([Business Function]), type nullable text),
+    AddPrio = Table.AddColumn(AddBF, PrioName,
+        each CalcPrioty([IBS], [Business Function], [_MappedBF], [CJ or IF], [Final Severity Rating]), type nullable text),
+    DropTemp = Table.RemoveColumns(AddPrio, {"_MappedBF"}),
+
+    // ---------- Column positions: Within SLA? after SLA Due Date; IBS, Cluster, Prioty after CI Name ----------
+    InsertAfter = (cols as list, anchor as text, newCols as list) as list =>
+        let pos = List.PositionOf(cols, anchor) in
+        if pos < 0 then cols & newCols
+        else List.FirstN(cols, pos + 1) & newCols & List.Skip(cols, pos + 1),
+    Order1 = InsertAfter(Table.ColumnNames(Base), "SLA Due Date", {"Within SLA?"}),
+    Order2 = InsertAfter(Order1, "CI Name", {"IBS", "Cluster", PrioName}),
+    Reordered = Table.ReorderColumns(DropTemp, Order2),
+
+    // ---------- Show date columns as dates (invalid values are kept as they are) ----------
+    DateCols = List.Intersect({Table.ColumnNames(Reordered), {
+        "SLA Start Date", "SLA Due Date", "Last Detected", "SNC Closed Date",
+        "Baselined Remediation Planned Date", "Remediation Planned Date", "Remediation Closed Date",
+        "Report Start Date", "Report End Date"}}),
+    Dated = Table.TransformColumns(Reordered,
+        List.Transform(DateCols, (c) => {c, each let d = fnToDate(_) in if d <> null then d else _}))
+in
+    Dated
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 14: med_ThisMonth
+  This month's Medium values for every baseline key (long format).
+  Connection only.
+---------------------------------------------------------------------
+let
+    Cfg = Config,
+    Bases = src_MediumBase,
+    StatusCol = Cfg[MediumStatusColumn],
+    FieldNames = {"Remediation Status", "Remediation Domain", "Planned Remediation (Month)", "Final Severity Rating"},
+
+    // Read the big table once, only the columns needed, and keep it in memory
+    VM = Table.Buffer(Table.SelectColumns(src_VMTable, List.Distinct({
+        "Unique Reference ID", "Business Function", StatusCol, "Remediation Domain",
+        "Remediation Planned Date", "Final Severity Rating", "Report End Date"}))),
+
+    CleanText = (v as any) as nullable text =>
+        if v = null then null
+        else let t = Text.Trim(Text.Clean(Text.From(v))) in if t = "" then null else t,
+    PlannedMonth = (v as any) as nullable text =>
+        let t = CleanText(v) in
+        if t = null then "No Plan Date"
+        else if List.Contains({"NA", "N/A"}, Text.Upper(t)) then "No Plan Date"
+        else
+            let d = fnToDate(v) in
+            if d = null then t else Date.ToText(d, "MMM-yyyy", Cfg[PlannedMonthCulture]),
+
+    // ---------- Report month = most common valid Report End Date ----------
+    Reds = List.RemoveNulls(List.Transform(VM[Report End Date], fnToDate)),
+    ReportEnd = if List.IsEmpty(Reds) then error "No valid Report End Date found in vm_Processed" else List.Mode(Reds),
+    MonthEnd = Date.EndOfMonth(ReportEnd),
+    SnapshotMonth = Date.ToText(MonthEnd, "yyyy-MM", "en-US"),
+
+    WithBF = Table.AddColumn(VM, "_BF", each let t = CleanText([Business Function]) in if t = null then null else Text.Upper(t), type nullable text),
+    WithKey = Table.Buffer(Table.AddColumn(WithBF, "_Key", each fnCleanKey([Unique Reference ID]), type nullable text)),
+
+    // ---------- One Medium type ----------
+    ForType = (m as record) as table =>
+        let
+            BaseTbl = Record.Field(Bases, m[Type]),
+            BaseKeys = List.Distinct(List.RemoveNulls(List.Transform(Table.Column(BaseTbl, m[KeyColumn]), fnCleanKey))),
+            KeySet = Record.FromList(List.Repeat({true}, List.Count(BaseKeys)), BaseKeys),
+            Eq = List.Transform(m[BFEquals], Text.Upper),
+            Ct = List.Transform(m[BFContains], Text.Upper),
+            Filtered = Table.SelectRows(WithKey, each
+                [_Key] <> null and [_BF] <> null
+                and (List.Contains(Eq, [_BF]) or List.AnyTrue(List.Transform(Ct, (c) => Text.Contains([_BF], c))))
+                and Record.HasFields(KeySet, [_Key])),
+            Vals = Table.AddColumn(Filtered, "Vals", (r) => Record.FromList({
+                CleanText(Record.Field(r, StatusCol)),
+                CleanText(r[Remediation Domain]),
+                PlannedMonth(r[Remediation Planned Date]),
+                CleanText(r[Final Severity Rating])}, FieldNames)),
+            Grouped = Table.Group(Vals, {"_Key"}, {{"Rows", each [Vals], type list}}),
+            Resolved = Table.AddColumn(Grouped, "R", each
+                let
+                    rows = [Rows],
+                    conflict = List.Count(List.Distinct(rows)) > 1
+                in
+                    if conflict and Cfg[DuplicateKeyRule] = "Flag"
+                    then Record.FromList(List.Repeat({null}, List.Count(FieldNames)), FieldNames) & [Conflict = true]
+                    else rows{0} & [Conflict = conflict]),
+            Expanded = Table.ExpandRecordColumn(Table.RemoveColumns(Resolved, {"Rows"}), "R", FieldNames & {"Conflict"}),
+            Renamed = Table.RenameColumns(Expanded, {{"_Key", "Key"}}),
+            Tagged = Table.AddColumn(Renamed, "MediumType", each m[Type], type text)
+        in
+            Tagged,
+
+    All = Table.Combine(List.Transform(Cfg[MediumTypes], ForType)),
+    AddMonth = Table.AddColumn(All, "SnapshotMonth", each SnapshotMonth, type text),
+    AddEnd = Table.AddColumn(AddMonth, "MonthEnd", each MonthEnd, type date),
+    Result = Table.Buffer(Table.SelectColumns(AddEnd, {"SnapshotMonth", "MonthEnd", "MediumType", "Key"} & FieldNames & {"Conflict"}))
+in
+    Result
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 15: med_Long
+  Saved history + this month, long format. Load to a worksheet table.
+  This table is what the SaveSnapshot script saves from, and what the
+  four Medium output tables read from.
+---------------------------------------------------------------------
+let
+    Cfg = Config,
+    ThisMonth = Table.Buffer(med_ThisMonth),
+    Month = if Table.IsEmpty(ThisMonth) then null else ThisMonth{0}[SnapshotMonth],
+
+    CleanText = (v as any) as nullable text =>
+        if v = null then null else let t = Text.Trim(Text.From(v)) in if t = "" then null else t,
+    MonthText = (v as any) as nullable text =>
+        if v = null then null
+        else if v is date or v is datetime then Date.ToText(Date.From(v), "yyyy-MM", "en-US")
+        else CleanText(v),
+    ToBool = (v as any) as logical => v = true or (v is text and Text.Lower(Text.Trim(v)) = "true"),
+    // Excel may turn "Feb-2027" into a date when it is saved; turn it back into text
+    PlannedText = (v as any) as nullable text =>
+        if v is date or v is datetime then Date.ToText(Date.From(v), "MMM-yyyy", Cfg[PlannedMonthCulture])
+        else CleanText(v),
+
+    // ---------- Saved history (blank rows removed; this month's old copy removed) ----------
+    Hist = Table.SelectRows(src_History, each fnCleanKey([Key]) <> null),
+    HistClean = Table.TransformColumns(Hist, {
+        {"SnapshotMonth", MonthText}, {"MonthEnd", fnToDate}, {"MediumType", CleanText}, {"Key", fnCleanKey},
+        {"Remediation Status", CleanText}, {"Remediation Domain", CleanText},
+        {"Planned Remediation (Month)", PlannedText}, {"Final Severity Rating", CleanText},
+        {"Conflict", ToBool}}),
+    HistOther = if Month = null then HistClean else Table.SelectRows(HistClean, each [SnapshotMonth] <> Month),
+    HistTagged = Table.AddColumn(HistOther, "Source", each "History", type text),
+    ThisTagged = Table.AddColumn(ThisMonth, "Source", each "This month (not yet saved)", type text),
+    Combined = Table.Buffer(Table.Combine({HistTagged, ThisTagged})),
+
+    LatestEnd = List.Max(Combined[MonthEnd]),
+    AddLatest = Table.AddColumn(Combined, "IsLatest", each [MonthEnd] = LatestEnd, type logical),
+    Sorted = Table.Sort(AddLatest, {{"MonthEnd", Order.Ascending}, {"MediumType", Order.Ascending}, {"Key", Order.Ascending}}),
+    Typed = Table.TransformColumnTypes(Sorted, {
+        {"SnapshotMonth", type text}, {"MonthEnd", type date}, {"MediumType", type text}, {"Key", type text},
+        {"Remediation Status", type text}, {"Remediation Domain", type text},
+        {"Planned Remediation (Month)", type text}, {"Final Severity Rating", type text},
+        {"Conflict", type logical}, {"Source", type text}, {"IsLatest", type logical}})
+in
+    Typed
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 16: fnMediumOutput
+  Function: builds one Medium output table =
+    all baseline columns (old history columns included)
+    + one group of columns per saved month
+    + (Latest) columns + the two planning flags.
+---------------------------------------------------------------------
+(mediumType as text) as table =>
+let
+    Cfg = Config,
+    Spec = List.First(List.Select(Cfg[MediumTypes], each _[Type] = mediumType)),
+    Base = Record.Field(src_MediumBase, mediumType),
+    LongAll = Table.Buffer(Table.TransformColumns(src_MedLongTable, {{"MonthEnd", fnToDate}, {"Key", fnCleanKey}})),
+
+    AllMonths = List.Sort(List.Distinct(List.RemoveNulls(LongAll[MonthEnd]))),
+    LatestEnd = if List.IsEmpty(AllMonths) then null else List.Last(AllMonths),
+    Long = Table.SelectRows(LongAll, each [MediumType] = mediumType),
+
+    // ---------- Column names (same spelling as the existing report) ----------
+    Abbr = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"},
+    LabelNoYear = (d as date) as text => Text.From(Date.Day(d)) & " " & Abbr{Date.Month(d) - 1},
+    Label = (d as date) as text => LabelNoYear(d) & (if Cfg[LabelWithYear] then " " & Text.From(Date.Year(d)) else ""),
+    Fields = {"Remediation Status", "Remediation Domain", "Planned Remediation (Month)", "Final Severity Rating"},
+    OutBase = [
+        #"Remediation Status" = "Remediation Status",
+        #"Remediation Domain" = "Remediaiton Domain",
+        #"Planned Remediation (Month)" = "Planned Remediation (Month)",
+        #"Final Severity Rating" = "Final Severity Rating"],
+    ColName = (f as text, lbl as text) as text => Record.Field(OutBase, f) & " (" & lbl & ")",
+    DatedNames = List.Combine(List.Transform(AllMonths, (m) => List.Transform(Fields, (f) => ColName(f, Label(m))))),
+    LatestNames = List.Transform(Fields, (f) => ColName(f, "Latest")),
+    FlagNames = {"Planned Within Target (Latest)", "Remediation Plan Expired (Latest)"},
+
+    // ---------- Baseline: drop any column that this query rebuilds ----------
+    Rebuilt = DatedNames
+        & List.Combine(List.Transform(AllMonths, (m) => List.Transform(Fields, (f) => ColName(f, LabelNoYear(m)))))
+        & LatestNames & FlagNames,
+    BaseClean = Table.RemoveColumns(Base, List.Intersect({Table.ColumnNames(Base), Rebuilt})),
+    BaseCols = Table.ColumnNames(BaseClean),
+    BaseKeyed = Table.AddColumn(BaseClean, "__Key", each fnCleanKey(Record.Field(_, Spec[KeyColumn])), type nullable text),
+
+    // ---------- Long -> wide (one group of columns per month) ----------
+    Slim = Table.SelectColumns(Long, {"Key", "MonthEnd"} & Fields),
+    Unpivoted = Table.UnpivotOtherColumns(Slim, {"Key", "MonthEnd"}, "Field", "Value"),
+    Named = Table.AddColumn(Unpivoted, "Column", each ColName([Field], Label([MonthEnd])), type text),
+    Pivoted = Table.Pivot(Table.SelectColumns(Named, {"Key", "Column", "Value"}), DatedNames, "Column", "Value", each List.First(_)),
+
+    // ---------- Latest month values ----------
+    LatestRows =
+        if LatestEnd = null then #table({"Key"} & Fields, {})
+        else Table.SelectColumns(Table.SelectRows(Long, each [MonthEnd] = LatestEnd), {"Key"} & Fields),
+    LatestRenamed = Table.RenameColumns(LatestRows, List.Transform(Fields, (f) => {f, ColName(f, "Latest")})),
+
+    // ---------- Join onto the baseline (every baseline row is kept) ----------
+    J1 = Table.NestedJoin(BaseKeyed, {"__Key"}, Pivoted, {"Key"}, "P", JoinKind.LeftOuter),
+    E1 = Table.ExpandTableColumn(J1, "P", DatedNames),
+    J2 = Table.NestedJoin(E1, {"__Key"}, LatestRenamed, {"Key"}, "L", JoinKind.LeftOuter),
+    E2 = Table.ExpandTableColumn(J2, "L", LatestNames),
+
+    // ---------- Planning flags (no status filter here; the KPI formulas filter status) ----------
+    ReportStart = if LatestEnd = null then null else Date.StartOfMonth(LatestEnd),
+    YearEnd = if LatestEnd = null then null else Date.EndOfYear(LatestEnd),
+    PlannedStart = (t as any) as nullable date =>
+        if t = null or not (t is text) then null
+        else try Date.FromText("1-" & Text.Trim(t), [Format = "d-MMM-yyyy", Culture = Cfg[PlannedMonthCulture]]) otherwise null,
+    PlannedCol = ColName("Planned Remediation (Month)", "Latest"),
+    AddWithin = Table.AddColumn(E2, "Planned Within Target (Latest)",
+        each let p = PlannedStart(Record.Field(_, PlannedCol)) in
+            if p <> null and ReportStart <> null and p >= ReportStart and p <= YearEnd then Cfg[FlagTrue] else Cfg[FlagFalse]),
+    AddExpired = Table.AddColumn(AddWithin, "Remediation Plan Expired (Latest)",
+        each let p = PlannedStart(Record.Field(_, PlannedCol)) in
+            if p <> null and ReportStart <> null and p < ReportStart then Cfg[FlagTrue] else Cfg[FlagFalse]),
+
+    Result = Table.SelectColumns(AddExpired, BaseCols & DatedNames & LatestNames & FlagNames)
+in
+    Result
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 17: tblMediumPT_Automated      (load to a worksheet table)
+---------------------------------------------------------------------
+let
+    Result = fnMediumOutput("PT")
+in
+    Result
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 18: tblMediumIVS_Automated     (load to a worksheet table)
+---------------------------------------------------------------------
+let
+    Result = fnMediumOutput("IVS")
+in
+    Result
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 19: tblMediumAVS_Automated     (load to a worksheet table)
+---------------------------------------------------------------------
+let
+    Result = fnMediumOutput("AVS")
+in
+    Result
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 20: tblMediumCVE_Automated     (load to a worksheet table)
+---------------------------------------------------------------------
+let
+    Result = fnMediumOutput("CVE")
+in
+    Result
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+QUERY 21: chk_Quality
+  Data checks for this month. Load to a worksheet table.
+---------------------------------------------------------------------
+let
+    Cfg = Config,
+    PrioName = Cfg[PriorityHeader],
+    VM = Table.Buffer(Table.SelectColumns(src_VMTable, List.Distinct({
+        "Unique Reference ID", "Report End Date", "Within SLA?", "Remediation Planned Date",
+        "Cluster", "ICS Group Country", PrioName, "Business Function"}), MissingField.Ignore)),
+    Files = src_InputFiles,
+    Long = Table.Buffer(src_MedLongTable),
+    Hist = Table.Buffer(src_History),
+    Bases = src_MediumBase,
+
+    IsBlank = (v as any) as logical => v = null or (v is text and Text.Trim(v) = ""),
+    Col = (t as table, name as text) as list => if List.Contains(Table.ColumnNames(t), name) then Table.Column(t, name) else {},
+    CountWhere = (name as text, test as function) as number => List.Count(List.Select(Col(VM, name), test)),
+    MonthText = (v as any) as nullable text =>
+        if v = null then null
+        else if v is date or v is datetime then Date.ToText(Date.From(v), "yyyy-MM", "en-US")
+        else let t = Text.Trim(Text.From(v)) in if t = "" then null else t,
+    ToBool = (v as any) as logical => v = true or (v is text and Text.Lower(Text.Trim(v)) = "true"),
+    First10 = (l as list) as nullable text =>
+        if List.IsEmpty(l) then null else Text.Combine(List.Transform(List.FirstN(l, 10), Text.From), ", "),
+
+    // ---------- VM ----------
+    Ids = List.Transform(Col(VM, "Unique Reference ID"), each if IsBlank(_) then null else Text.Trim(Text.From(_))),
+    IdCounts = Table.Group(Table.FromList(List.RemoveNulls(Ids), Splitter.SplitByNothing(), {"id"}), {"id"}, {{"n", Table.RowCount, Int64.Type}}),
+    DupIds = Table.SelectRows(IdCounts, each [n] > 1)[id],
+    Reds = List.Sort(List.Distinct(List.RemoveNulls(List.Transform(Col(VM, "Report End Date"), fnToDate)))),
+    VmMonth = if List.IsEmpty(Reds) then null
+        else Date.ToText(Date.EndOfMonth(List.Mode(List.RemoveNulls(List.Transform(Col(VM, "Report End Date"), fnToDate)))), "yyyy-MM", "en-US"),
+    PlanStates = {"no plan date", "plan date expired", "na", "n/a"},
+    BadPlan = CountWhere("Remediation Planned Date",
+        each not IsBlank(_) and not (_ is text and List.Contains(PlanStates, Text.Lower(Text.Trim(_)))) and fnToDate(_) = null),
+    CheckMapping = Table.SelectRows(VM, each Record.FieldOrDefault(_, "Cluster", null) = "Check Mapping"),
+
+    // ---------- med_Long ----------
+    ThisRows = Table.SelectRows(Long, each Text.StartsWith(Text.From([Source]), "This month")),
+    LongMonth = if Table.IsEmpty(ThisRows) then null else MonthText(ThisRows{0}[SnapshotMonth]),
+    MonthOk = VmMonth <> null and LongMonth = VmMonth,
+
+    // ---------- Snapshots ----------
+    HistRows = Table.SelectRows(Hist, each not IsBlank([Key])),
+    HistMonths = List.Sort(List.Distinct(List.RemoveNulls(List.Transform(HistRows[SnapshotMonth], MonthText)))),
+    HistDup = Table.RowCount(Table.SelectRows(
+        Table.Group(Table.TransformColumns(HistRows, {{"SnapshotMonth", MonthText}, {"Key", fnCleanKey}}),
+            {"SnapshotMonth", "MediumType", "Key"}, {{"n", Table.RowCount, Int64.Type}}), each [n] > 1)),
+    Saved = VmMonth <> null and List.Contains(HistMonths, VmMonth),
+
+    // ---------- Per Medium type ----------
+    DupLabel = if Cfg[DuplicateKeyRule] = "Flag" then "values left blank" else "first row used",
+    TypeRows = List.Combine(List.Transform(Cfg[MediumTypes], (m) =>
+        let
+            t = m[Type],
+            keysAll = List.RemoveNulls(List.Transform(Table.Column(Record.Field(Bases, t), m[KeyColumn]), fnCleanKey)),
+            keys = List.Distinct(keysAll),
+            rows = Table.SelectRows(ThisRows, each [MediumType] = t),
+            found = Table.RowCount(rows),
+            conflicts = Table.SelectRows(rows, each ToBool([Conflict]))[Key]
+        in {
+            {"Medium " & t, "Keys in baseline (distinct)", List.Count(keys), null},
+            {"Medium " & t, "Duplicate keys in baseline", List.Count(keysAll) - List.Count(keys), null},
+            {"Medium " & t, "Found this month", found, LongMonth},
+            {"Medium " & t, "Not found this month", List.Count(keys) - found, null},
+            {"Medium " & t, "Raw IDs repeated with different values (" & DupLabel & ")", List.Count(conflicts), First10(conflicts)}
+        })),
+
+    Rows = {
+        {"Input", "Files in Input folder (must be 1)", Table.RowCount(Files), Text.Combine(Files[Name], "; ")},
+        {"Input", "Report End Dates in vm_Processed (should be 1)", List.Count(Reds),
+            Text.Combine(List.Transform(Reds, each Date.ToText(_, "d MMM yyyy", "en-GB")), ", ")},
+        {"Input", "med_Long is for the same month as vm_Processed (must be 1)", if MonthOk then 1 else 0,
+            "vm_Processed: " & (if VmMonth = null then "-" else VmMonth) & " | med_Long: " & (if LongMonth = null then "-" else LongMonth)
+            & (if MonthOk then "" else " -> refresh med_Long, then Refresh All")},
+        {"VM", "Rows", Table.RowCount(VM), null},
+        {"VM", "Missing Unique Reference ID", List.Count(List.Select(Ids, each _ = null)), null},
+        {"VM", "Duplicate Unique Reference ID", List.Count(DupIds), First10(DupIds)},
+        {"VM", "Within SLA? = Invalid Date", CountWhere("Within SLA?", each _ = "Invalid Date"), null},
+        {"VM", "Invalid Remediation Planned Date", BadPlan, null},
+        {"VM", "Cluster = Check Mapping", Table.RowCount(CheckMapping),
+            First10(List.Distinct(List.RemoveNulls(Col(CheckMapping, "ICS Group Country"))))},
+        {"VM", PrioName & " = Check Input", CountWhere(PrioName, each _ = "Check Input"), null},
+        {"VM", "Blank Business Function", CountWhere("Business Function", IsBlank), null}
+    } & TypeRows & {
+        {"Snapshots", "This month already saved", if Saved then 1 else 0,
+            if Saved then "Saved. Running SaveSnapshot again replaces this month." else "Not saved yet. Run SaveSnapshot after the checks are OK."},
+        {"Snapshots", "Months saved", List.Count(HistMonths), Text.Combine(HistMonths, ", ")},
+        {"Snapshots", "Duplicate rows in saved Snapshots (must be 0)", HistDup, null}
+    },
+    Result = Table.FromRows(Rows, type table [Area = text, Check = text, Count = nullable number, Detail = nullable text])
+in
+    Result
+---------------------------------------------------------------------
